@@ -1,0 +1,114 @@
+{
+  "updatedAt": "2026-11-26",
+  "focusNote": "Dec 2026 – Mar 2027 · Pre-enrollment preparation before starting my Master's at Kyoto University NLP Lab. Prioritizing from-scratch PyTorch/LLM implementations, interview-ready English algorithm notes, and daily spoken Japanese.",
+  "sections": [
+    {
+      "id": "sec-pre-m1",
+      "period": "DEC 2026 – MAR 2027 · ACTIVE",
+      "title": "Pre-Enrollment Foundation",
+      "note": "Arrive in Kyoto ready to read modern LLM/speech papers fluently, run clean PyTorch experiments, and communicate naturally in English and Japanese.",
+      "items": [
+        {
+          "id": "item-1",
+          "text": "Launch English personal website with Writing, rich Timeline, and live-editable Plan",
+          "detail": "Built with Astro + KaTeX and deployed to feuclain.github.io.",
+          "tag": "Site",
+          "done": true
+        },
+        {
+          "id": "item-2",
+          "text": "Implement core Transformer & LLM modules from scratch in PyTorch",
+          "detail": "Causal MHA, GQA, RoPE, KV cache, RMSNorm, SwiGLU, LoRA, and mini-GPT training loop.",
+          "tag": "AI / LLM",
+          "done": false
+        },
+        {
+          "id": "item-3",
+          "text": "Run an end-to-end post-training & inference experiment on a small open model",
+          "detail": "Practice SFT + DPO/GRPO workflow, evaluation harnesses, and INT4/AWQ serving.",
+          "tag": "AI / LLM",
+          "done": false
+        },
+        {
+          "id": "item-4",
+          "text": "Read recent ACL / EMNLP / speech papers from Kyoto University NLP Lab",
+          "detail": "Survey research directions across sub-groups ahead of April advisor matching.",
+          "tag": "Academic",
+          "done": false
+        },
+        {
+          "id": "item-5",
+          "text": "Complete NeetCode core patterns with English Think-Aloud notes",
+          "detail": "Focus on clean problem decomposition, invariants, edge cases, and complexity explanation.",
+          "tag": "Algorithms",
+          "done": false
+        },
+        {
+          "id": "item-6",
+          "text": "Daily Japanese shadowing & spoken technical self-introduction drills",
+          "detail": "30 min/day listening & shadowing + weekly conversation sessions.",
+          "tag": "Japanese",
+          "done": false
+        }
+      ]
+    },
+    {
+      "id": "sec-m1",
+      "period": "APR 2027 – MAR 2028 · KYOTO M1",
+      "title": "Lab Research & Summer Internships",
+      "note": "Settle into Kyoto NLP Lab, choose a focused research direction, and enter M1 internship pipelines.",
+      "items": [
+        {
+          "id": "item-7",
+          "text": "Finalize research advisor & initial Master's research topic",
+          "detail": "Explore intersections of LLM post-training, speech/multimodal processing, and efficient systems.",
+          "tag": "Academic",
+          "done": false
+        },
+        {
+          "id": "item-8",
+          "text": "Apply for M1 summer & autumn engineering / AI internships in Japan",
+          "detail": "Target global tech teams, semiconductor AI groups, and industrial R&D labs.",
+          "tag": "Career",
+          "done": false
+        },
+        {
+          "id": "item-9",
+          "text": "Pass JLPT N1 (July 2027)",
+          "detail": "Consolidate formal Japanese credential alongside practical lab & interview fluency.",
+          "tag": "Japanese",
+          "done": false
+        },
+        {
+          "id": "item-10",
+          "text": "Aim for first international conference submission (ACL / EMNLP / Interspeech)",
+          "detail": "Release clean, reproducible experiment code alongside the paper.",
+          "tag": "Academic",
+          "done": false
+        }
+      ]
+    },
+    {
+      "id": "sec-reading",
+      "period": "STUDY QUEUE",
+      "title": "Courses, Books & Reference Material",
+      "note": "Active learning resources on my desk.",
+      "items": [
+        {
+          "id": "item-11",
+          "text": "Andrej Karpathy — Neural Networks: Zero to Hero",
+          "detail": "Hand-coding autograd, makemore, and GPT-2 from scratch.",
+          "tag": "Course",
+          "done": false
+        },
+        {
+          "id": "item-12",
+          "text": "Stanford CS224N & CS336 (Language Modeling from Scratch)",
+          "detail": "Modern NLP architecture, scaling, data, and systems trade-offs.",
+          "tag": "Course",
+          "done": false
+        }
+      ]
+    }
+  ]
+}

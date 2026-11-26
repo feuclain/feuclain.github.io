@@ -1,47 +1,36 @@
 ---
 import { getCollection } from 'astro:content';
 import BaseLayout from '../layouts/BaseLayout.astro';
-import timelineData from '../data/timeline.json';
-import { CATEGORY_META } from '../utils/format';
+import { CATEGORY_META, formatDate } from '../utils/format';
 
-const totalPosts = (await getCollection('writing', ({ data }) => !data.draft)).length;
-const milestones = timelineData.milestones;
+const rawEntries = (await getCollection('timeline')).sort(
+  (a, b) => b.data.date.valueOf() - a.data.date.valueOf()
+);
 
-const stats = [
-  { label: 'Milestones Logged', value: String(milestones.length) },
-  { label: 'English Notes', value: String(totalPosts) },
-  { label: 'LeetCode Logged', value: timelineData.stats.leetcodeSolved },
-  { label: 'Enrollment Target', value: timelineData.stats.targetEnrollment },
-];
+const entries = await Promise.all(
+  rawEntries.map(async (entry) => {
+    const { Content } = await entry.render();
+    return { entry, Content };
+  })
+);
 
-const categories = ['all', 'ai-llm', 'algorithms', 'academic', 'japan'];
+const categories = ['all', 'ai-llm', 'algorithms', 'academic', 'japan', 'life'];
 ---
 
 <BaseLayout
   title="Timeline"
-  description="A chronological log of completed milestones, experiments, coursework, and steps toward Kyoto University NLP."
+  description="Chronological stream of milestones, visual snapshots, experiment logs, and notes from Nanjing University to Kyoto University NLP."
 >
   <header class="page-header">
-    <div class="eyebrow">CHRONOLOGICAL LOG</div>
-    <h1 class="page-title">Journey & Completed Milestones</h1>
+    <div class="eyebrow">CHRONOLOGICAL STREAM</div>
+    <h1 class="page-title">Timeline & Snapshots</h1>
     <p class="page-lead">
-      A verifiable paper trail of what I have actually built, read, and shipped — from
-      Nanjing University Software Engineering to Kyoto University's NLP Lab.
+      A free-form log of milestones, study snapshots, experiment diagrams, code notes, and life
+      moments along the way to Kyoto.
     </p>
   </header>
 
-  <section class="stats-grid">
-    {
-      stats.map((s) => (
-        <div class="card stat-card">
-          <div class="stat-value">{s.value}</div>
-          <div class="stat-label">{s.label}</div>
-        </div>
-      ))
-    }
-  </section>
-
-  <div class="controls-bar" style="margin-top: 2rem;">
+  <div class="controls-bar">
     <div class="filter-tabs" role="tablist" aria-label="Filter timeline">
       {
         categories.map((cat) => (
@@ -50,102 +39,223 @@ const categories = ['all', 'ai-llm', 'algorithms', 'academic', 'japan'];
             data-cat={cat}
             type="button"
           >
-            {cat === 'all' ? 'All' : (CATEGORY_META[cat]?.label ?? cat)}
+            {cat === 'all' ? `All (${entries.length})` : (CATEGORY_META[cat]?.label ?? cat)}
           </button>
         ))
       }
     </div>
+
+    <input
+      id="timeline-search"
+      class="search-input"
+      type="search"
+      placeholder="Search timeline..."
+      aria-label="Search timeline entries"
+    />
   </div>
 
   <ol class="timeline-track" id="timeline-list">
     {
-      milestones.map((item) => {
-        const meta = CATEGORY_META[item.category] ?? {
-          label: item.category,
+      entries.map(({ entry, Content }) => {
+        const { data } = entry;
+        const meta = CATEGORY_META[data.category] ?? {
+          label: data.category,
           badgeClass: 'badge-ai-llm',
         };
+        const dateLabel = data.displayDate || formatDate(data.date);
+        const searchBlob = [
+          data.title || '',
+          data.location || '',
+          dateLabel,
+          meta.label,
+          entry.body,
+        ]
+          .join(' ')
+          .toLowerCase();
+
         return (
-          <li class="timeline-entry" data-cat={item.category}>
-            <div class:list={['timeline-dot', `dot-${item.category}`]} />
-            <div class="card timeline-card">
-              <div class="post-meta">
-                <span class="timeline-date">{item.date}</span>
-                <span>·</span>
+          <li
+            class="timeline-entry"
+            data-cat={data.category}
+            data-search={searchBlob}
+          >
+            <div class:list={['timeline-dot', `dot-${data.category}`]} />
+            <article class:list={['card', 'timeline-card', { 'card-compact': !data.title }]}>
+              <div class="timeline-meta">
+                <time class="timeline-date">{dateLabel}</time>
+                <span class="meta-dot">·</span>
                 <span class:list={['badge', meta.badgeClass]}>{meta.label}</span>
+                {data.location && (
+                  <>
+                    <span class="meta-dot">·</span>
+                    <span class="timeline-loc">📍 {data.location}</span>
+                  </>
+                )}
               </div>
-              <h2 class="timeline-title">{item.title}</h2>
-              <p class="timeline-note">{item.note}</p>
-              {item.link && (
-                <a
-                  href={item.link.url}
-                  class="timeline-link"
-                  target={item.link.url.startsWith('http') ? '_blank' : undefined}
-                  rel={item.link.url.startsWith('http') ? 'noreferrer' : undefined}
+
+              {data.title && <h2 class="timeline-title">{data.title}</h2>}
+
+              {data.images.length > 0 && (
+                <div
+                  class:list={[
+                    'timeline-gallery',
+                    data.images.length === 1
+                      ? 'gallery-single'
+                      : data.images.length === 2
+                        ? 'gallery-two'
+                        : 'gallery-multi',
+                  ]}
                 >
-                  {item.link.label} →
-                </a>
+                  {data.images.map((img) => (
+                    <figure class="gallery-figure">
+                      <button
+                        type="button"
+                        class="zoom-trigger"
+                        data-src={img.src}
+                        data-caption={img.caption || img.alt || ''}
+                        aria-label={`Zoom image: ${img.alt || data.title || 'timeline photo'}`}
+                      >
+                        <img src={img.src} alt={img.alt} loading="lazy" />
+                      </button>
+                      {img.caption && <figcaption>{img.caption}</figcaption>}
+                    </figure>
+                  ))}
+                </div>
               )}
-            </div>
+
+              <div class="timeline-prose prose">
+                <Content />
+              </div>
+
+              {data.links.length > 0 && (
+                <div class="timeline-links">
+                  {data.links.map((link) => (
+                    <a
+                      href={link.url}
+                      class="timeline-link-pill"
+                      target={link.url.startsWith('http') ? '_blank' : undefined}
+                      rel={link.url.startsWith('http') ? 'noreferrer' : undefined}
+                    >
+                      <span>{link.label}</span>
+                      <span>{link.url.startsWith('http') ? '↗' : '→'}</span>
+                    </a>
+                  ))}
+                </div>
+              )}
+            </article>
           </li>
         );
       })
     }
   </ol>
 
+  <p id="timeline-empty" class="empty-state" hidden>
+    No timeline entries matched your filter.
+  </p>
+
+  <!-- Image Lightbox Modal -->
+  <div id="lightbox" class="lightbox" hidden role="dialog" aria-modal="true" aria-label="Image preview">
+    <button type="button" id="lightbox-close" class="lightbox-close" aria-label="Close preview">
+      ✕
+    </button>
+    <div class="lightbox-inner">
+      <img id="lightbox-img" src="" alt="" />
+      <p id="lightbox-caption" class="lightbox-caption"></p>
+    </div>
+  </div>
+
   <script is:inline>
     const buttons = document.querySelectorAll('.filter-btn');
-    const entries = document.querySelectorAll('#timeline-list .timeline-entry');
+    const searchInput = document.getElementById('timeline-search');
+    const items = document.querySelectorAll('#timeline-list .timeline-entry');
+    const emptyState = document.getElementById('timeline-empty');
+
+    let selectedCat = 'all';
+
+    function filterTimeline() {
+      const q = (searchInput?.value || '').trim().toLowerCase();
+      let visible = 0;
+
+      items.forEach((el) => {
+        const cat = el.getAttribute('data-cat');
+        const haystack = el.getAttribute('data-search') || '';
+        const catOk = selectedCat === 'all' || cat === selectedCat;
+        const qOk = !q || haystack.includes(q);
+        const show = catOk && qOk;
+        el.style.display = show ? 'block' : 'none';
+        if (show) visible++;
+      });
+
+      if (emptyState) emptyState.hidden = visible > 0;
+    }
 
     buttons.forEach((btn) => {
       btn.addEventListener('click', () => {
         buttons.forEach((b) => b.classList.remove('active'));
         btn.classList.add('active');
-        const selected = btn.getAttribute('data-cat');
-        entries.forEach((el) => {
-          const cat = el.getAttribute('data-cat');
-          el.style.display = selected === 'all' || cat === selected ? 'block' : 'none';
-        });
+        selectedCat = btn.getAttribute('data-cat') || 'all';
+        filterTimeline();
       });
+    });
+
+    searchInput?.addEventListener('input', filterTimeline);
+
+    // Lightbox for both gallery images and inline Markdown images
+    const lightbox = document.getElementById('lightbox');
+    const lightboxImg = document.getElementById('lightbox-img');
+    const lightboxCap = document.getElementById('lightbox-caption');
+    const lightboxClose = document.getElementById('lightbox-close');
+
+    function openLightbox(src, caption) {
+      if (!lightbox || !lightboxImg) return;
+      lightboxImg.src = src;
+      lightboxImg.alt = caption || '';
+      if (lightboxCap) {
+        lightboxCap.textContent = caption || '';
+        lightboxCap.hidden = !caption;
+      }
+      lightbox.hidden = false;
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeLightbox() {
+      if (!lightbox) return;
+      lightbox.hidden = true;
+      document.body.style.overflow = '';
+    }
+
+    document.querySelectorAll('.zoom-trigger').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        openLightbox(btn.getAttribute('data-src'), btn.getAttribute('data-caption'));
+      });
+    });
+
+    document.querySelectorAll('.timeline-prose img').forEach((img) => {
+      img.style.cursor = 'zoom-in';
+      img.addEventListener('click', () => {
+        openLightbox(img.getAttribute('src'), img.getAttribute('alt') || '');
+      });
+    });
+
+    lightboxClose?.addEventListener('click', closeLightbox);
+    lightbox?.addEventListener('click', (e) => {
+      if (e.target === lightbox) closeLightbox();
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && lightbox && !lightbox.hidden) closeLightbox();
     });
   </script>
 </BaseLayout>
 
 <style>
-  .stats-grid {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 0.9rem;
-  }
-
-  .stat-card {
-    padding: 1.05rem 1.2rem;
-  }
-
-  .stat-value {
-    font-family: var(--font-serif);
-    font-size: 1.7rem;
-    font-weight: 500;
-    line-height: 1.15;
-    color: var(--text);
-  }
-
-  .stat-label {
-    font-family: var(--font-mono);
-    font-size: 0.72rem;
-    color: var(--text-muted);
-    margin-top: 0.35rem;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-  }
-
   .timeline-track {
     list-style: none;
-    margin: 1.5rem 0 0;
-    padding: 0 0 0 1.6rem;
+    margin: 1rem 0 0;
+    padding: 0 0 0 1.65rem;
     border-left: 2px solid var(--border);
     display: flex;
     flex-direction: column;
-    gap: 1.25rem;
+    gap: 1.35rem;
   }
 
   .timeline-entry {
@@ -154,7 +264,7 @@ const categories = ['all', 'ai-llm', 'algorithms', 'academic', 'japan'];
 
   .timeline-dot {
     position: absolute;
-    left: calc(-1.6rem - 7px);
+    left: calc(-1.65rem - 7px);
     top: 1.45rem;
     width: 12px;
     height: 12px;
@@ -176,8 +286,27 @@ const categories = ['all', 'ai-llm', 'algorithms', 'academic', 'japan'];
     background: var(--amber);
   }
 
+  .dot-life {
+    background: var(--vermilion);
+  }
+
   .timeline-card {
-    padding: 1.15rem 1.35rem;
+    padding: 1.25rem 1.45rem;
+  }
+
+  .card-compact {
+    padding: 1.05rem 1.35rem;
+  }
+
+  .timeline-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.76rem;
+    color: var(--text-muted);
+    margin-bottom: 0.45rem;
   }
 
   .timeline-date {
@@ -185,30 +314,194 @@ const categories = ['all', 'ai-llm', 'algorithms', 'academic', 'japan'];
     color: var(--text-secondary);
   }
 
+  .timeline-loc {
+    color: var(--text-muted);
+  }
+
   .timeline-title {
     font-family: var(--font-serif);
-    font-size: 1.25rem;
+    font-size: 1.32rem;
     font-weight: 500;
-    margin: 0.25rem 0 0.4rem;
+    line-height: 1.3;
+    margin: 0.25rem 0 0.75rem;
+    color: var(--text);
   }
 
-  .timeline-note {
+  /* Rich media galleries */
+  .timeline-gallery {
+    margin: 0.75rem 0 0.95rem;
+    display: grid;
+    gap: 0.75rem;
+  }
+
+  .gallery-single {
+    grid-template-columns: 1fr;
+  }
+
+  .gallery-two {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .gallery-multi {
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  }
+
+  .gallery-figure {
     margin: 0;
+  }
+
+  .zoom-trigger {
+    display: block;
+    width: 100%;
+    padding: 0;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    background: var(--bg-subtle);
+    cursor: zoom-in;
+    transition: border-color 0.15s ease, transform 0.15s ease;
+  }
+
+  .zoom-trigger:hover {
+    border-color: var(--accent);
+  }
+
+  .zoom-trigger img {
+    display: block;
+    width: 100%;
+    max-height: 340px;
+    object-fit: cover;
+  }
+
+  .gallery-two .zoom-trigger img,
+  .gallery-multi .zoom-trigger img {
+    height: 200px;
+  }
+
+  .gallery-figure figcaption {
+    margin-top: 0.4rem;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    line-height: 1.45;
+  }
+
+  /* Scoped prose inside timeline cards */
+  .timeline-prose {
+    max-width: none;
+    font-size: 0.95rem;
+    line-height: 1.68;
     color: var(--text-secondary);
-    font-size: 0.93rem;
-    line-height: 1.62;
   }
 
-  .timeline-link {
-    display: inline-block;
-    margin-top: 0.7rem;
+  .timeline-prose :global(p:last-child),
+  .timeline-prose :global(ul:last-child),
+  .timeline-prose :global(ol:last-child),
+  .timeline-prose :global(blockquote:last-child) {
+    margin-bottom: 0;
+  }
+
+  .timeline-prose :global(img) {
+    max-width: 100%;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    margin: 0.65rem 0;
+  }
+
+  .timeline-prose :global(blockquote) {
+    margin: 0.65rem 0 0.85rem;
+    padding: 0.65rem 1rem;
+    font-size: 0.92rem;
+  }
+
+  .timeline-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.95rem;
+    padding-top: 0.8rem;
+    border-top: 1px dashed var(--border);
+  }
+
+  .timeline-link-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.25rem 0.68rem;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    background: var(--bg-subtle);
     font-family: var(--font-mono);
-    font-size: 0.78rem;
+    font-size: 0.76rem;
+    color: var(--text-secondary);
   }
 
-  @media (max-width: 760px) {
-    .stats-grid {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+  .timeline-link-pill:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  /* Lightbox */
+  .lightbox[hidden] {
+    display: none !important;
+  }
+
+  .lightbox {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    background: rgba(10, 12, 16, 0.86);
+    backdrop-filter: blur(6px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+  }
+
+  .lightbox-inner {
+    max-width: min(92vw, 1020px);
+    max-height: 88vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .lightbox-inner img {
+    max-width: 100%;
+    max-height: 80vh;
+    border-radius: var(--radius-md);
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.45);
+    background: #141821;
+  }
+
+  .lightbox-caption {
+    margin: 0.75rem 0 0;
+    color: #d7dce6;
+    font-size: 0.88rem;
+    text-align: center;
+    max-width: 680px;
+  }
+
+  .lightbox-close {
+    position: fixed;
+    top: 1.25rem;
+    right: 1.5rem;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+    font-size: 1rem;
+    cursor: pointer;
+  }
+
+  .lightbox-close:hover {
+    background: rgba(255, 255, 255, 0.2);
+  }
+
+  @media (max-width: 640px) {
+    .gallery-two {
+      grid-template-columns: 1fr;
     }
   }
 </style>

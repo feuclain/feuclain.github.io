@@ -1,32 +1,68 @@
 {
   "name": "feuclain",
   "handle": "feuclain",
-  "title": "feuclain — AI, NLP & Engineering Notes",
-  "tagline": "From Software Engineering to Kyoto University NLP.",
-  "statusBadge": "Incoming M.S. Student · Kyoto University NLP Lab · Apr 2027",
+  "title": "feuclain — NLP, LLMs & Engineering Notes",
   "location": "Nanjing → Kyoto",
-  "bio": "B.Eng. in Software Engineering from Nanjing University. Incoming Master's student at the Language Media Processing Laboratory (NLP Group), Graduate School of Informatics, Kyoto University. Documenting my transition from software engineering into LLMs, NLP research, algorithms, and life in Japan — entirely in English.",
+  "role": "Incoming M.S. Student (Apr 2027)",
+  "affiliation": {
+    "name": "Language Media Processing Lab (NLP Group), Kyoto University",
+    "url": "https://nlp.ist.i.kyoto-u.ac.jp/"
+  },
+  "educationSummary": "B.Eng. in Software Engineering, Nanjing University (2021–2025)",
+  "bio": "Incoming Master's student at Kyoto University's Graduate School of Informatics (Intelligence Science and Technology). Documenting my learning path from software engineering into modern NLP, large language models, speech processing, and algorithms — written in English.",
   "links": {
     "github": "https://github.com/feuclain",
     "email": "",
     "linkedin": "",
+    "scholar": "",
+    "cv": "",
     "lab": "https://nlp.ist.i.kyoto-u.ac.jp/"
   },
-  "focusAreas": [
+  "researchInterests": [
+    "Large Language Models & Post-Training: Supervised fine-tuning, reinforcement finetuning & preference alignment (DPO, GRPO), and reasoning reliability",
+    "Natural Language & Speech Processing: Speech representation learning, automatic speech recognition (ASR), self-supervised learning, and multimodal voice agents",
+    "Mechanistic Interpretability & Knowledge Grounding: Internal representation analysis, cross-lingual behavior, and structured RAG"
+  ],
+  "secondaryInterestsNote": "Underlined areas reflect hands-on engineering background.",
+  "secondaryInterests": [
+    "Software Engineering & Systems: <u>Full-stack web systems</u>, <u>clean architecture</u>, and <u>data structures & algorithms</u>",
+    "Efficient LLM Inference: KV cache mechanics, quantization (INT4 / AWQ), and GPU memory-bandwidth optimization"
+  ],
+  "publications": [],
+  "projects": [
     {
-      "label": "01 / CORE RESEARCH",
-      "title": "NLP & Large Language Models",
-      "description": "From-scratch Transformer implementations, post-training alignment (SFT, DPO, RL), mechanistic interpretability, and reading Kyoto NLP Lab papers."
+      "title": "From-Scratch Transformer & LLM Notes in PyTorch",
+      "context": "Self-Study & Implementation Log",
+      "organization": "Pre-M1 Preparation",
+      "period": "2026.11 – Present",
+      "summary": "Implementing core modern LLM components on raw PyTorch tensors — causal multi-head attention, RoPE, GQA, KV cache, and mini-GPT training loops.",
+      "url": "/writing/attention-and-rope-from-scratch",
+      "repoUrl": "https://github.com/feuclain",
+      "image": "/images/timeline/attention-heatmap.svg"
     },
     {
-      "label": "02 / SYSTEMS & HARDWARE",
-      "title": "Efficient Inference & MLSys",
-      "description": "Bridging software engineering with AI: KV cache mechanics, quantization (AWQ/GPTQ), vLLM serving, and GPU memory profiling."
+      "title": "Collaborative Kanban Workflow System",
+      "context": "B.Eng. Capstone Project",
+      "organization": "Nanjing University",
+      "period": "2025",
+      "summary": "Designed and engineered a full-stack Kanban board application for agile task tracking and team workflow management as my undergraduate thesis project.",
+      "url": "",
+      "repoUrl": "https://github.com/feuclain",
+      "image": ""
+    }
+  ],
+  "activities": [
+    {
+      "date": "2026.11",
+      "html": "Launched this English personal website & study log built with Astro and KaTeX."
     },
     {
-      "label": "03 / ENGINEERING CRAFT",
-      "title": "Algorithms & Think-Aloud Practice",
-      "description": "Structured LeetCode solutions written in interview-ready English — emphasizing intuition, invariants, edge cases, and clean complexity analysis."
+      "date": "2026.09",
+      "html": "Received admission to the Master's program at <strong>Kyoto University</strong>, Graduate School of Informatics (<a href=\"https://nlp.ist.i.kyoto-u.ac.jp/\" target=\"_blank\" rel=\"noreferrer\">Language Media Processing Laboratory</a>), enrolling in April 2027."
+    },
+    {
+      "date": "2025.06",
+      "html": "Graduated from <strong>Nanjing University</strong> with a B.Eng. in Software Engineering."
     }
   ]
 }

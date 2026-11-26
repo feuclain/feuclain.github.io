@@ -6,16 +6,8 @@ export const CATEGORY_META: Record<
   algorithms: { label: 'Algorithms', badgeClass: 'badge-algorithms' },
   essays: { label: 'Essays', badgeClass: 'badge-essays' },
   academic: { label: 'Academic', badgeClass: 'badge-academic' },
-  japan: { label: 'Japan & Life', badgeClass: 'badge-japan' },
-};
-
-export const STATUS_META: Record<
-  string,
-  { label: string; badgeClass: string }
-> = {
-  done: { label: 'Done', badgeClass: 'badge-done' },
-  'in-progress': { label: 'In Progress', badgeClass: 'badge-in-progress' },
-  planned: { label: 'Planned', badgeClass: 'badge-planned' },
+  japan: { label: 'Japan & Language', badgeClass: 'badge-japan' },
+  life: { label: 'Life & Notes', badgeClass: 'badge-essays' },
 };
 
 export function formatDate(date: Date | string): string {

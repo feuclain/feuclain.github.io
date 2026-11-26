@@ -1,172 +1,785 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import roadmapData from '../data/roadmap.json';
-import { STATUS_META } from '../utils/format';
+import initialPlan from '../data/plan.json';
 
-const { now, phases } = roadmapData;
+// Escape `</script>` defensively when serializing initial JSON payload
+const serializedPlan = JSON.stringify(initialPlan).replace(/</g, '\\u003c');
 ---
 
 <BaseLayout
-  title="Now & Plan"
-  description="Current learning sprint and multi-quarter roadmap from pre-enrollment through Kyoto University M.S. and career prep."
+  title="Plan"
+  description="Near-term checklist, study priorities, and future milestones — read-only for visitors, directly editable by owner via GitHub authentication."
 >
-  <header class="page-header">
-    <div class="eyebrow">NOW & FUTURE ROADMAP · UPDATED {now.lastUpdated}</div>
-    <h1 class="page-title">Current Focus & Learning Plan</h1>
-    <p class="page-lead">
-      Inspired by the <code>/now</code> page movement. Top half tracks what I am actively
-      shipping this month; bottom half maps my multi-phase plan through Kyoto University
-      and engineering/AI recruiting in Japan.
-    </p>
+  <header class="page-header plan-page-header">
+    <div class="plan-header-row">
+      <div>
+        <div class="eyebrow">
+          <span>PLAN & CHECKLIST</span>
+          <span>·</span>
+          <span>UPDATED <span id="plan-updated-at">{initialPlan.updatedAt}</span></span>
+        </div>
+        <h1 class="page-title">Current & Future Plan</h1>
+        <p class="page-lead">
+          Actionable checklists and upcoming milestones without artificial progress bars.
+        </p>
+      </div>
+
+      <div class="owner-controls">
+        <button id="unlock-btn" type="button" class="owner-btn" title="Owner edit mode (GitHub Token)">
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <rect width="18" height="11" x="3" y="11" rx="2" ry="2"></rect>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+          </svg>
+          <span>Edit Plan</span>
+        </button>
+      </div>
+    </div>
   </header>
 
-  <section class="now-banner card">
-    <div class="now-head">
-      <div>
-        <span class="badge badge-in-progress">{now.sprintName}</span>
-        <h2 class="now-title">Active Priorities</h2>
-      </div>
-      <span class="now-meta">Target: {now.targetDate}</span>
+  <!-- Sticky Owner Edit Toolbar (shown only when authenticated in Edit Mode) -->
+  <div id="editor-toolbar" class="editor-toolbar card" hidden>
+    <div class="toolbar-left">
+      <span id="editor-status-dot" class="editor-dot"></span>
+      <span id="editor-status-text" class="editor-status">Edit Mode Unlocked</span>
     </div>
-    <p class="now-summary">{now.summary}</p>
+    <div class="toolbar-actions">
+      <button id="add-section-btn" type="button" class="tool-btn">+ Section</button>
+      <button id="discard-btn" type="button" class="tool-btn" hidden>Discard</button>
+      <button id="save-github-btn" type="button" class="tool-btn tool-btn-primary">
+        Save to GitHub
+      </button>
+      <button id="exit-edit-btn" type="button" class="tool-btn">Done</button>
+      <button id="forget-token-btn" type="button" class="tool-btn tool-btn-danger" title="Remove saved token from this browser">
+        Forget Token
+      </button>
+    </div>
+  </div>
 
-    <div class="grid-2" style="margin-top: 1.35rem;">
-      {
-        now.tracks.map((track) => (
-          <div class="track-box">
-            <div class="track-top">
-              <span class="track-title">{track.title}</span>
-              <span class="track-pct">{track.progress}%</span>
-            </div>
-            <p class="track-detail">{track.detail}</p>
-            <div class="progress-track">
-              <div class="progress-fill" style={`width: ${track.progress}%`} />
-            </div>
-          </div>
-        ))
-      }
-    </div>
-
-    <div class="reading-shelf">
-      <div class="shelf-label">CURRENT READING & STUDY SHELF</div>
-      <div class="shelf-grid">
-        {
-          now.readingShelf.map((item) => (
-            <div class="shelf-item">
-              <span class="shelf-kind">{item.kind}</span>
-              <span class="shelf-name">{item.title}</span>
-            </div>
-          ))
-        }
-      </div>
-    </div>
+  <!-- Current Focus Note -->
+  <section class="focus-banner card">
+    <div class="focus-banner-label">CURRENT FOCUS</div>
+    <p id="focus-note-view" class="focus-note-text">{initialPlan.focusNote}</p>
+    <textarea
+      id="focus-note-input"
+      class="focus-note-textarea"
+      rows="3"
+      hidden
+      placeholder="Write your current focus or monthly theme..."
+    ></textarea>
   </section>
 
-  <section>
-    <div class="section-heading">
-      <h2>Near-Term & Future Roadmap</h2>
-      <div class="filter-tabs" role="tablist" aria-label="Filter roadmap status">
-        <button class="filter-btn active" data-status="all" type="button">All</button>
-        <button class="filter-btn" data-status="in-progress" type="button">
-          In Progress
-        </button>
-        <button class="filter-btn" data-status="planned" type="button">Planned</button>
-        <button class="filter-btn" data-status="done" type="button">Done</button>
+  <!-- Filter Bar (Read Mode) -->
+  <div id="filter-bar" class="controls-bar" style="margin-top: 2rem;">
+    <div class="filter-tabs" role="tablist" aria-label="Filter plan items">
+      <button class="filter-btn active" data-filter="all" type="button">All</button>
+      <button class="filter-btn" data-filter="todo" type="button">To Do</button>
+      <button class="filter-btn" data-filter="done" type="button">Completed</button>
+    </div>
+  </div>
+
+  <!-- Plan Sections Container -->
+  <div id="plan-sections" class="plan-stack"></div>
+
+  <p id="plan-empty" class="empty-state" hidden>
+    No plan items match this filter.
+  </p>
+
+  <!-- GitHub Token Auth Modal -->
+  <div id="auth-modal" class="auth-modal" hidden role="dialog" aria-modal="true" aria-labelledby="auth-modal-title">
+    <div class="auth-dialog card">
+      <div class="auth-dialog-head">
+        <h2 id="auth-modal-title">Unlock Owner Edit Mode</h2>
+        <button type="button" id="auth-close-btn" class="icon-close" aria-label="Close">✕</button>
       </div>
+      <p class="auth-desc">
+        This site runs on static GitHub Pages. To edit directly in the browser while keeping the page
+        strictly read-only for visitors, enter a GitHub
+        <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noreferrer">
+          Fine-grained Personal Access Token ↗
+        </a>
+        scoped only to <code>feuclain/feuclain.github.io</code>:
+      </p>
+      <ol class="auth-steps">
+        <li><strong>Repository access</strong> → <em>Only select repositories</em> → <code>feuclain/feuclain.github.io</code></li>
+        <li><strong>Permissions</strong> → <em>Repository permissions</em> → <strong>Contents: Read and write</strong></li>
+        <li>Paste the token below (stored <strong>only</strong> in this browser's <code>localStorage</code>).</li>
+      </ol>
+      <form id="auth-form">
+        <input
+          id="token-input"
+          type="password"
+          class="token-input"
+          placeholder="github_pat_..."
+          autocomplete="off"
+          required
+        />
+        <p id="auth-error" class="auth-error" hidden></p>
+        <div class="auth-actions">
+          <button type="button" id="auth-cancel-btn" class="tool-btn">Cancel</button>
+          <button type="submit" id="auth-submit-btn" class="tool-btn tool-btn-primary">
+            Verify & Unlock
+          </button>
+        </div>
+      </form>
     </div>
+  </div>
 
-    <div class="phase-stack">
-      {
-        phases.map((phase) => {
-          const pMeta = STATUS_META[phase.status] ?? STATUS_META.planned;
-          return (
-            <div class="card phase-card" data-phase-status={phase.status}>
-              <div class="phase-header">
-                <div>
-                  <div class="phase-period">{phase.period}</div>
-                  <h3 class="phase-title">{phase.title}</h3>
-                </div>
-                <span class:list={['badge', pMeta.badgeClass]}>{pMeta.label}</span>
-              </div>
-              <p class="phase-goal">{phase.goal}</p>
-
-              <ul class="task-list">
-                {phase.items.map((task) => {
-                  const tMeta = STATUS_META[task.status] ?? STATUS_META.planned;
-                  return (
-                    <li class="task-row" data-task-status={task.status}>
-                      <span class:list={['task-check', `check-${task.status}`]}>
-                        {task.status === 'done'
-                          ? '✓'
-                          : task.status === 'in-progress'
-                            ? '●'
-                            : '○'}
-                      </span>
-                      <div class="task-body">
-                        <div class="task-top">
-                          <span class="task-name">{task.title}</span>
-                          <span class:list={['badge', tMeta.badgeClass]}>
-                            {tMeta.label}
-                          </span>
-                        </div>
-                        <p class="task-desc">{task.detail}</p>
-                      </div>
-                    </li>
-                  );
-                })}
-              </ul>
-            </div>
-          );
-        })
-      }
-    </div>
-    <p id="roadmap-empty" class="empty-state" hidden>
-      No roadmap items currently match this status.
-    </p>
-  </section>
+  <script id="initial-plan-data" type="application/json" set:html={serializedPlan} />
 
   <script is:inline>
-    const filterBtns = document.querySelectorAll('.filter-btn');
-    const phaseCards = document.querySelectorAll('.phase-card');
-    const emptyMsg = document.getElementById('roadmap-empty');
+    (() => {
+      const REPO_OWNER = 'feuclain';
+      const REPO_NAME = 'feuclain.github.io';
+      const FILE_PATH = 'src/data/plan.json';
+      const BRANCH = 'main';
+      const TOKEN_KEY = 'feuclain_plan_gh_token';
 
-    filterBtns.forEach((btn) => {
-      btn.addEventListener('click', () => {
-        filterBtns.forEach((b) => b.classList.remove('active'));
-        btn.classList.add('active');
-        const status = btn.getAttribute('data-status');
-        let totalVisible = 0;
+      const initialEl = document.getElementById('initial-plan-data');
+      let committedPlan = JSON.parse(initialEl ? initialEl.textContent : '{}');
+      let workingPlan = structuredClone(committedPlan);
+      let fileSha = null;
 
-        phaseCards.forEach((card) => {
-          const rows = card.querySelectorAll('.task-row');
-          let visibleInPhase = 0;
+      let isEditing = false;
+      let isDirty = false;
+      let activeFilter = 'all';
 
-          rows.forEach((row) => {
-            const rowStatus = row.getAttribute('data-task-status');
-            const show = status === 'all' || rowStatus === status;
-            row.style.display = show ? 'flex' : 'none';
-            if (show) visibleInPhase++;
-          });
+      // DOM elements
+      const updatedAtEl = document.getElementById('plan-updated-at');
+      const unlockBtn = document.getElementById('unlock-btn');
+      const toolbar = document.getElementById('editor-toolbar');
+      const statusDot = document.getElementById('editor-status-dot');
+      const statusText = document.getElementById('editor-status-text');
+      const addSectionBtn = document.getElementById('add-section-btn');
+      const discardBtn = document.getElementById('discard-btn');
+      const saveBtn = document.getElementById('save-github-btn');
+      const exitEditBtn = document.getElementById('exit-edit-btn');
+      const forgetTokenBtn = document.getElementById('forget-token-btn');
 
-          const showCard = status === 'all' || visibleInPhase > 0;
-          card.style.display = showCard ? 'block' : 'none';
-          if (showCard) totalVisible++;
+      const focusView = document.getElementById('focus-note-view');
+      const focusInput = document.getElementById('focus-note-input');
+      const filterBar = document.getElementById('filter-bar');
+      const sectionsEl = document.getElementById('plan-sections');
+      const emptyEl = document.getElementById('plan-empty');
+
+      const authModal = document.getElementById('auth-modal');
+      const authForm = document.getElementById('auth-form');
+      const tokenInput = document.getElementById('token-input');
+      const authError = document.getElementById('auth-error');
+      const authSubmitBtn = document.getElementById('auth-submit-btn');
+      const authCloseBtn = document.getElementById('auth-close-btn');
+      const authCancelBtn = document.getElementById('auth-cancel-btn');
+
+      function encodeUtf8Base64(str) {
+        const bytes = new TextEncoder().encode(str);
+        let binary = '';
+        for (let i = 0; i < bytes.length; i++) {
+          binary += String.fromCharCode(bytes[i]);
+        }
+        return btoa(binary);
+      }
+
+      function decodeUtf8Base64(b64) {
+        const clean = b64.replace(/\s/g, '');
+        const binary = atob(clean);
+        const bytes = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i++) {
+          bytes[i] = binary.charCodeAt(i);
+        }
+        return new TextDecoder('utf-8').decode(bytes);
+      }
+
+      function uid(prefix) {
+        return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
+      }
+
+      function markDirty(dirty = true) {
+        isDirty = dirty;
+        if (!isEditing) return;
+        if (discardBtn) discardBtn.hidden = !dirty;
+        if (dirty) {
+          statusDot.className = 'editor-dot dot-dirty';
+          statusText.textContent = 'Unsaved changes (Ctrl/Cmd+S to save)';
+        } else {
+          statusDot.className = 'editor-dot dot-clean';
+          statusText.textContent = 'Edit Mode Unlocked';
+        }
+      }
+
+      function setStatus(kind, message) {
+        statusDot.className = `editor-dot dot-${kind}`;
+        statusText.textContent = message;
+      }
+
+      function createEl(tag, className, text) {
+        const el = document.createElement(tag);
+        if (className) el.className = className;
+        if (text !== undefined) el.textContent = text;
+        return el;
+      }
+
+      function render() {
+        const data = isEditing ? workingPlan : committedPlan;
+        if (updatedAtEl) updatedAtEl.textContent = data.updatedAt || '';
+
+        if (isEditing) {
+          unlockBtn.hidden = true;
+          toolbar.hidden = false;
+          filterBar.hidden = true;
+          focusView.hidden = true;
+          focusInput.hidden = false;
+          focusInput.value = data.focusNote || '';
+        } else {
+          unlockBtn.hidden = false;
+          toolbar.hidden = true;
+          filterBar.hidden = false;
+          focusView.hidden = false;
+          focusInput.hidden = true;
+          focusView.textContent = data.focusNote || '';
+        }
+
+        sectionsEl.innerHTML = '';
+        let visibleSections = 0;
+
+        (data.sections || []).forEach((sec, secIdx) => {
+          if (!isEditing) {
+            // Read-only view
+            const filteredItems = (sec.items || []).filter((item) => {
+              if (activeFilter === 'todo') return !item.done;
+              if (activeFilter === 'done') return !!item.done;
+              return true;
+            });
+
+            if (activeFilter !== 'all' && filteredItems.length === 0) return;
+            visibleSections++;
+
+            const card = createEl('section', 'card plan-section-card');
+            const head = createEl('div', 'plan-sec-head');
+            const headLeft = createEl('div');
+            if (sec.period) headLeft.appendChild(createEl('div', 'plan-sec-period', sec.period));
+            headLeft.appendChild(createEl('h2', 'plan-sec-title', sec.title || 'Untitled Section'));
+            head.appendChild(headLeft);
+
+            const doneCount = (sec.items || []).filter((i) => i.done).length;
+            const totalCount = (sec.items || []).length;
+            if (totalCount > 0) {
+              head.appendChild(
+                createEl('span', 'plan-sec-count', `${doneCount} / ${totalCount} done`)
+              );
+            }
+            card.appendChild(head);
+
+            if (sec.note) {
+              card.appendChild(createEl('p', 'plan-sec-note', sec.note));
+            }
+
+            const ul = createEl('ul', 'plan-item-list');
+            filteredItems.forEach((item) => {
+              const li = createEl('li', `plan-item-row${item.done ? ' is-done' : ''}`);
+              const check = createEl(
+                'span',
+                `plan-check ${item.done ? 'check-done' : 'check-todo'}`,
+                item.done ? '✓' : ''
+              );
+              check.setAttribute('aria-hidden', 'true');
+              li.appendChild(check);
+
+              const body = createEl('div', 'plan-item-body');
+              const topLine = createEl('div', 'plan-item-topline');
+              topLine.appendChild(createEl('span', 'plan-item-text', item.text));
+              if (item.tag) {
+                topLine.appendChild(createEl('span', 'tag-chip', item.tag));
+              }
+              body.appendChild(topLine);
+
+              if (item.detail) {
+                body.appendChild(createEl('p', 'plan-item-detail', item.detail));
+              }
+              li.appendChild(body);
+              ul.appendChild(li);
+            });
+
+            card.appendChild(ul);
+            sectionsEl.appendChild(card);
+          } else {
+            // Interactive Owner Edit Mode
+            visibleSections++;
+            const card = createEl('section', 'card plan-section-card is-editing');
+
+            const secTopBar = createEl('div', 'edit-sec-topbar');
+            const periodInput = createEl('input', 'edit-input edit-period-input');
+            periodInput.type = 'text';
+            periodInput.placeholder = 'PERIOD / LABEL (e.g. DEC 2026 – MAR 2027)';
+            periodInput.value = sec.period || '';
+            periodInput.addEventListener('input', () => {
+              sec.period = periodInput.value;
+              markDirty();
+            });
+            secTopBar.appendChild(periodInput);
+
+            const secBtns = createEl('div', 'edit-row-btns');
+            const upSec = createEl('button', 'mini-icon-btn', '↑');
+            upSec.type = 'button';
+            upSec.title = 'Move section up';
+            upSec.disabled = secIdx === 0;
+            upSec.addEventListener('click', () => {
+              const arr = workingPlan.sections;
+              [arr[secIdx - 1], arr[secIdx]] = [arr[secIdx], arr[secIdx - 1]];
+              markDirty();
+              render();
+            });
+
+            const downSec = createEl('button', 'mini-icon-btn', '↓');
+            downSec.type = 'button';
+            downSec.title = 'Move section down';
+            downSec.disabled = secIdx === workingPlan.sections.length - 1;
+            downSec.addEventListener('click', () => {
+              const arr = workingPlan.sections;
+              [arr[secIdx + 1], arr[secIdx]] = [arr[secIdx], arr[secIdx + 1]];
+              markDirty();
+              render();
+            });
+
+            const delSec = createEl('button', 'mini-icon-btn mini-danger', 'Delete Section');
+            delSec.type = 'button';
+            delSec.addEventListener('click', () => {
+              if (!confirm(`Delete section "${sec.title || 'Untitled'}"?`)) return;
+              workingPlan.sections.splice(secIdx, 1);
+              markDirty();
+              render();
+            });
+
+            secBtns.append(upSec, downSec, delSec);
+            secTopBar.appendChild(secBtns);
+            card.appendChild(secTopBar);
+
+            const titleInput = createEl('input', 'edit-input edit-sec-title-input');
+            titleInput.type = 'text';
+            titleInput.placeholder = 'Section Title';
+            titleInput.value = sec.title || '';
+            titleInput.addEventListener('input', () => {
+              sec.title = titleInput.value;
+              markDirty();
+            });
+            card.appendChild(titleInput);
+
+            const noteInput = createEl('input', 'edit-input edit-sec-note-input');
+            noteInput.type = 'text';
+            noteInput.placeholder = 'Optional section subtitle or goal...';
+            noteInput.value = sec.note || '';
+            noteInput.addEventListener('input', () => {
+              sec.note = noteInput.value;
+              markDirty();
+            });
+            card.appendChild(noteInput);
+
+            const ul = createEl('ul', 'plan-item-list edit-item-list');
+            (sec.items || []).forEach((item, itemIdx) => {
+              const li = createEl('li', `edit-item-row${item.done ? ' is-done' : ''}`);
+
+              const toggleBtn = createEl(
+                'button',
+                `plan-check plan-check-btn ${item.done ? 'check-done' : 'check-todo'}`,
+                item.done ? '✓' : ''
+              );
+              toggleBtn.type = 'button';
+              toggleBtn.title = item.done ? 'Mark as To Do' : 'Mark as Completed';
+              toggleBtn.addEventListener('click', () => {
+                item.done = !item.done;
+                markDirty();
+                render();
+              });
+              li.appendChild(toggleBtn);
+
+              const fields = createEl('div', 'edit-item-fields');
+              const row1 = createEl('div', 'edit-item-row1');
+
+              const textIn = createEl('input', 'edit-input edit-item-text');
+              textIn.type = 'text';
+              textIn.placeholder = 'Plan item...';
+              textIn.value = item.text || '';
+              textIn.addEventListener('input', () => {
+                item.text = textIn.value;
+                markDirty();
+              });
+
+              const tagIn = createEl('input', 'edit-input edit-item-tag');
+              tagIn.type = 'text';
+              tagIn.placeholder = 'Tag';
+              tagIn.value = item.tag || '';
+              tagIn.addEventListener('input', () => {
+                item.tag = tagIn.value;
+                markDirty();
+              });
+
+              row1.append(textIn, tagIn);
+
+              const detailIn = createEl('input', 'edit-input edit-item-detail');
+              detailIn.type = 'text';
+              detailIn.placeholder = 'Optional note / detail...';
+              detailIn.value = item.detail || '';
+              detailIn.addEventListener('input', () => {
+                item.detail = detailIn.value;
+                markDirty();
+              });
+
+              fields.append(row1, detailIn);
+              li.appendChild(fields);
+
+              const itemBtns = createEl('div', 'edit-item-actions');
+              const upBtn = createEl('button', 'mini-icon-btn', '↑');
+              upBtn.type = 'button';
+              upBtn.disabled = itemIdx === 0;
+              upBtn.addEventListener('click', () => {
+                const arr = sec.items;
+                [arr[itemIdx - 1], arr[itemIdx]] = [arr[itemIdx], arr[itemIdx - 1]];
+                markDirty();
+                render();
+              });
+
+              const downBtn = createEl('button', 'mini-icon-btn', '↓');
+              downBtn.type = 'button';
+              downBtn.disabled = itemIdx === sec.items.length - 1;
+              downBtn.addEventListener('click', () => {
+                const arr = sec.items;
+                [arr[itemIdx + 1], arr[itemIdx]] = [arr[itemIdx], arr[itemIdx + 1]];
+                markDirty();
+                render();
+              });
+
+              const delBtn = createEl('button', 'mini-icon-btn mini-danger', '✕');
+              delBtn.type = 'button';
+              delBtn.title = 'Delete item';
+              delBtn.addEventListener('click', () => {
+                sec.items.splice(itemIdx, 1);
+                markDirty();
+                render();
+              });
+
+              itemBtns.append(upBtn, downBtn, delBtn);
+              li.appendChild(itemBtns);
+              ul.appendChild(li);
+            });
+
+            card.appendChild(ul);
+
+            const addItemBtn = createEl('button', 'add-item-btn', '+ Add Item');
+            addItemBtn.type = 'button';
+            addItemBtn.addEventListener('click', () => {
+              sec.items = sec.items || [];
+              sec.items.push({
+                id: uid('item'),
+                text: '',
+                detail: '',
+                tag: '',
+                done: false,
+              });
+              markDirty();
+              render();
+              const inputs = card.querySelectorAll('.edit-item-text');
+              const last = inputs[inputs.length - 1];
+              if (last) last.focus();
+            });
+            card.appendChild(addItemBtn);
+
+            sectionsEl.appendChild(card);
+          }
         });
 
-        if (emptyMsg) {
-          emptyMsg.hidden = totalVisible > 0;
+        if (emptyEl) {
+          emptyEl.hidden = isEditing || visibleSections > 0;
+        }
+      }
+
+      focusInput?.addEventListener('input', () => {
+        workingPlan.focusNote = focusInput.value;
+        markDirty();
+      });
+
+      // Filter buttons in Read-Only mode
+      document.querySelectorAll('#filter-bar .filter-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('#filter-bar .filter-btn').forEach((b) =>
+            b.classList.remove('active')
+          );
+          btn.classList.add('active');
+          activeFilter = btn.getAttribute('data-filter') || 'all';
+          render();
+        });
+      });
+
+      // Fetch latest committed plan.json from GitHub API so recent browser edits appear immediately
+      async function fetchLatestFromGitHub() {
+        const token = localStorage.getItem(TOKEN_KEY);
+        const headers = { Accept: 'application/vnd.github+json' };
+        if (token) headers.Authorization = `Bearer ${token}`;
+
+        try {
+          const res = await fetch(
+            `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${FILE_PATH}?ref=${BRANCH}`,
+            { headers, cache: 'no-store' }
+          );
+          if (!res.ok) return;
+          const payload = await res.json();
+          if (payload && payload.content) {
+            fileSha = payload.sha;
+            const parsed = JSON.parse(decodeUtf8Base64(payload.content));
+            committedPlan = parsed;
+            if (!isEditing || !isDirty) {
+              workingPlan = structuredClone(committedPlan);
+              render();
+            }
+          }
+        } catch {
+          // Offline or rate-limited: keep build-time SSG fallback silently
+        }
+      }
+
+      async function verifyRepoWriteAccess(token) {
+        const res = await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}`, {
+          headers: {
+            Accept: 'application/vnd.github+json',
+            Authorization: `Bearer ${token}`,
+          },
+          cache: 'no-store',
+        });
+        if (!res.ok) {
+          throw new Error('Invalid token or unable to reach GitHub API.');
+        }
+        const repo = await res.json();
+        if (!repo.permissions || !repo.permissions.push) {
+          throw new Error(
+            `This token does not have write (Contents: Read and write) access to ${REPO_OWNER}/${REPO_NAME}.`
+          );
+        }
+      }
+
+      function enterEditMode() {
+        workingPlan = structuredClone(committedPlan);
+        isEditing = true;
+        markDirty(false);
+        render();
+      }
+
+      function openAuthModal(errMsg = '') {
+        authError.hidden = !errMsg;
+        authError.textContent = errMsg;
+        tokenInput.value = '';
+        authModal.hidden = false;
+        setTimeout(() => tokenInput.focus(), 30);
+      }
+
+      function closeAuthModal() {
+        authModal.hidden = true;
+      }
+
+      unlockBtn?.addEventListener('click', async () => {
+        const savedToken = localStorage.getItem(TOKEN_KEY);
+        if (savedToken) {
+          unlockBtn.disabled = true;
+          const prevLabel = unlockBtn.querySelector('span');
+          if (prevLabel) prevLabel.textContent = 'Verifying...';
+          try {
+            await verifyRepoWriteAccess(savedToken);
+            await fetchLatestFromGitHub();
+            enterEditMode();
+          } catch {
+            localStorage.removeItem(TOKEN_KEY);
+            openAuthModal('Saved token expired or revoked. Please enter a new token.');
+          } finally {
+            unlockBtn.disabled = false;
+            if (prevLabel) prevLabel.textContent = 'Edit Plan';
+          }
+        } else {
+          openAuthModal();
         }
       });
-    });
+
+      authForm?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const candidate = tokenInput.value.trim();
+        if (!candidate) return;
+
+        authSubmitBtn.disabled = true;
+        authSubmitBtn.textContent = 'Verifying...';
+        authError.hidden = true;
+
+        try {
+          await verifyRepoWriteAccess(candidate);
+          localStorage.setItem(TOKEN_KEY, candidate);
+          closeAuthModal();
+          await fetchLatestFromGitHub();
+          enterEditMode();
+        } catch (err) {
+          authError.textContent = err.message || 'Verification failed.';
+          authError.hidden = false;
+        } finally {
+          authSubmitBtn.disabled = false;
+          authSubmitBtn.textContent = 'Verify & Unlock';
+        }
+      });
+
+      authCloseBtn?.addEventListener('click', closeAuthModal);
+      authCancelBtn?.addEventListener('click', closeAuthModal);
+      authModal?.addEventListener('click', (e) => {
+        if (e.target === authModal) closeAuthModal();
+      });
+
+      addSectionBtn?.addEventListener('click', () => {
+        workingPlan.sections = workingPlan.sections || [];
+        workingPlan.sections.unshift({
+          id: uid('sec'),
+          period: 'NEW PHASE',
+          title: 'New Section',
+          note: '',
+          items: [
+            {
+              id: uid('item'),
+              text: '',
+              detail: '',
+              tag: '',
+              done: false,
+            },
+          ],
+        });
+        markDirty();
+        render();
+      });
+
+      discardBtn?.addEventListener('click', () => {
+        if (isDirty && !confirm('Discard all unsaved edits?')) return;
+        workingPlan = structuredClone(committedPlan);
+        markDirty(false);
+        render();
+      });
+
+      exitEditBtn?.addEventListener('click', () => {
+        if (isDirty && !confirm('You have unsaved changes. Exit without saving?')) return;
+        isEditing = false;
+        isDirty = false;
+        render();
+      });
+
+      forgetTokenBtn?.addEventListener('click', () => {
+        if (!confirm('Remove saved GitHub token from this browser and exit edit mode?')) return;
+        localStorage.removeItem(TOKEN_KEY);
+        isEditing = false;
+        isDirty = false;
+        render();
+      });
+
+      async function saveToGitHub() {
+        const token = localStorage.getItem(TOKEN_KEY);
+        if (!token) {
+          openAuthModal('Please unlock with your GitHub token first.');
+          return;
+        }
+
+        saveBtn.disabled = true;
+        saveBtn.textContent = 'Saving...';
+        setStatus('saving', 'Committing plan.json to GitHub...');
+
+        try {
+          // Always grab latest SHA first to avoid 409 conflicts
+          const metaRes = await fetch(
+            `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${FILE_PATH}?ref=${BRANCH}`,
+            {
+              headers: {
+                Accept: 'application/vnd.github+json',
+                Authorization: `Bearer ${token}`,
+              },
+              cache: 'no-store',
+            }
+          );
+          if (metaRes.ok) {
+            const meta = await metaRes.json();
+            fileSha = meta.sha;
+          }
+
+          const today = new Date().toISOString().slice(0, 10);
+          workingPlan.updatedAt = today;
+
+          const jsonString = JSON.stringify(workingPlan, null, 2) + '\n';
+          const putBody = {
+            message: `chore(plan): update plan (${today})`,
+            content: encodeUtf8Base64(jsonString),
+            branch: BRANCH,
+          };
+          if (fileSha) putBody.sha = fileSha;
+
+          const putRes = await fetch(
+            `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${FILE_PATH}`,
+            {
+              method: 'PUT',
+              headers: {
+                Accept: 'application/vnd.github+json',
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify(putBody),
+            }
+          );
+
+          if (!putRes.ok) {
+            const errJson = await putRes.json().catch(() => ({}));
+            throw new Error(errJson.message || `GitHub API returned ${putRes.status}`);
+          }
+
+          const result = await putRes.json();
+          if (result.content && result.content.sha) {
+            fileSha = result.content.sha;
+          }
+
+          committedPlan = structuredClone(workingPlan);
+          isDirty = false;
+          if (discardBtn) discardBtn.hidden = true;
+          if (updatedAtEl) updatedAtEl.textContent = today;
+          setStatus('clean', 'Saved to GitHub ✓ (live now, static rebuild triggered)');
+        } catch (err) {
+          setStatus('error', `Save failed: ${err.message}`);
+        } finally {
+          saveBtn.disabled = false;
+          saveBtn.textContent = 'Save to GitHub';
+        }
+      }
+
+      saveBtn?.addEventListener('click', saveToGitHub);
+
+      document.addEventListener('keydown', (e) => {
+        if (isEditing && (e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+          e.preventDefault();
+          saveToGitHub();
+        }
+        if (e.key === 'Escape' && authModal && !authModal.hidden) {
+          closeAuthModal();
+        }
+      });
+
+      window.addEventListener('beforeunload', (e) => {
+        if (isEditing && isDirty) {
+          e.preventDefault();
+          e.returnValue = '';
+        }
+      });
+
+      // Initial render + live refresh from GitHub
+      render();
+      fetchLatestFromGitHub();
+    })();
   </script>
 </BaseLayout>
 
 <style>
-  .now-banner {
-    padding: 1.65rem 1.75rem;
-  }
-
-  .now-head {
+  .plan-header-row {
     display: flex;
     flex-wrap: wrap;
     align-items: flex-start;
@@ -174,191 +787,271 @@ const { now, phases } = roadmapData;
     gap: 1rem;
   }
 
-  .now-title {
-    font-family: var(--font-serif);
-    font-size: 1.55rem;
-    font-weight: 500;
-    margin: 0.45rem 0 0;
-  }
-
-  .now-meta {
-    font-family: var(--font-mono);
-    font-size: 0.78rem;
-    color: var(--text-muted);
-  }
-
-  .now-summary {
-    margin: 0.75rem 0 0;
-    color: var(--text-secondary);
-    font-size: 0.96rem;
-    max-width: 720px;
-  }
-
-  .track-box {
-    padding: 1rem 1.1rem;
+  .owner-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.45rem 0.85rem;
     border-radius: var(--radius-sm);
-    background: var(--bg-subtle);
     border: 1px solid var(--border);
-  }
-
-  .track-top {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    gap: 0.5rem;
-  }
-
-  .track-title {
-    font-weight: 600;
-    font-size: 0.93rem;
-  }
-
-  .track-pct {
+    background: var(--bg-elevated);
+    color: var(--text-secondary);
     font-family: var(--font-mono);
     font-size: 0.78rem;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+
+  .owner-btn:hover {
+    border-color: var(--accent);
     color: var(--accent);
-    font-weight: 600;
   }
 
-  .track-detail {
-    margin: 0.35rem 0 0.25rem;
-    font-size: 0.84rem;
-    color: var(--text-secondary);
-    line-height: 1.5;
+  /* Sticky Editor Toolbar */
+  .editor-toolbar[hidden],
+  .auth-modal[hidden] {
+    display: none !important;
   }
 
-  .reading-shelf {
-    margin-top: 1.5rem;
-    padding-top: 1.25rem;
-    border-top: 1px solid var(--border);
+  .editor-toolbar {
+    position: sticky;
+    top: 4.5rem;
+    z-index: 35;
+    margin-bottom: 1.5rem;
+    padding: 0.85rem 1.15rem;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.85rem;
+    border-color: var(--accent);
+    box-shadow: var(--shadow-md);
   }
 
-  .shelf-label {
+  .toolbar-left {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    font-weight: 500;
+  }
+
+  .editor-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--emerald);
+  }
+
+  .dot-clean {
+    background: var(--emerald);
+  }
+
+  .dot-dirty,
+  .dot-saving {
+    background: var(--amber);
+  }
+
+  .dot-error {
+    background: var(--vermilion);
+  }
+
+  .toolbar-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.45rem;
+  }
+
+  .tool-btn {
+    padding: 0.38rem 0.78rem;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    background: var(--bg-subtle);
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: 0.76rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+
+  .tool-btn:hover:not(:disabled) {
+    border-color: var(--border-strong);
+  }
+
+  .tool-btn-primary {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #ffffff;
+  }
+
+  [data-theme='dark'] .tool-btn-primary {
+    color: #0f1115;
+  }
+
+  .tool-btn-primary:hover:not(:disabled) {
+    background: var(--accent-hover);
+    border-color: var(--accent-hover);
+  }
+
+  .tool-btn-danger {
+    color: var(--vermilion);
+    background: transparent;
+  }
+
+  .tool-btn-danger:hover {
+    border-color: var(--vermilion);
+    background: var(--vermilion-soft);
+  }
+
+  /* Current Focus Banner */
+  .focus-banner {
+    padding: 1.25rem 1.45rem;
+    border-left: 3px solid var(--accent);
+  }
+
+  .focus-banner-label {
     font-family: var(--font-mono);
     font-size: 0.72rem;
     letter-spacing: 0.06em;
-    color: var(--text-muted);
-    margin-bottom: 0.75rem;
+    color: var(--accent);
+    font-weight: 600;
+    margin-bottom: 0.4rem;
   }
 
-  .shelf-grid {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 0.75rem;
+  .focus-note-text {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 0.96rem;
+    line-height: 1.68;
+    white-space: pre-wrap;
   }
 
-  .shelf-item {
-    display: flex;
-    flex-direction: column;
-    gap: 0.2rem;
-    padding: 0.7rem 0.85rem;
+  .focus-note-textarea {
+    width: 100%;
     border: 1px solid var(--border);
     border-radius: var(--radius-sm);
     background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-sans);
+    font-size: 0.95rem;
+    line-height: 1.6;
+    padding: 0.65rem 0.8rem;
+    resize: vertical;
   }
 
-  .shelf-kind {
-    font-family: var(--font-mono);
-    font-size: 0.68rem;
-    text-transform: uppercase;
-    color: var(--accent);
-  }
-
-  .shelf-name {
-    font-size: 0.85rem;
-    font-weight: 500;
-    line-height: 1.4;
-  }
-
-  .phase-stack {
+  /* Plan Sections & Items (Global selectors since rendered dynamically) */
+  .plan-stack {
     display: flex;
     flex-direction: column;
     gap: 1.25rem;
   }
 
-  .phase-card {
-    padding: 1.5rem 1.6rem;
+  :global(.plan-section-card) {
+    padding: 1.45rem 1.6rem;
   }
 
-  .phase-header {
+  :global(.plan-sec-head) {
     display: flex;
     flex-wrap: wrap;
-    justify-content: space-between;
     align-items: flex-start;
+    justify-content: space-between;
     gap: 0.75rem;
   }
 
-  .phase-period {
+  :global(.plan-sec-period) {
     font-family: var(--font-mono);
-    font-size: 0.75rem;
+    font-size: 0.74rem;
+    letter-spacing: 0.05em;
     color: var(--accent);
-    letter-spacing: 0.04em;
     text-transform: uppercase;
+    margin-bottom: 0.2rem;
   }
 
-  .phase-title {
+  :global(.plan-sec-title) {
     font-family: var(--font-serif);
     font-size: 1.4rem;
     font-weight: 500;
-    margin: 0.25rem 0 0;
-  }
-
-  .phase-goal {
-    margin: 0.6rem 0 1.15rem;
-    color: var(--text-secondary);
-    font-size: 0.93rem;
-  }
-
-  .task-list {
-    list-style: none;
     margin: 0;
+    line-height: 1.25;
+  }
+
+  :global(.plan-sec-count) {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    background: var(--bg-subtle);
+    padding: 0.2rem 0.58rem;
+    border-radius: 999px;
+  }
+
+  :global(.plan-sec-note) {
+    margin: 0.55rem 0 0;
+    color: var(--text-secondary);
+    font-size: 0.92rem;
+    line-height: 1.55;
+  }
+
+  :global(.plan-item-list) {
+    list-style: none;
+    margin: 1rem 0 0;
     padding: 0;
     display: flex;
     flex-direction: column;
-    gap: 0.85rem;
   }
 
-  .task-row {
+  :global(.plan-item-row) {
     display: flex;
     align-items: flex-start;
-    gap: 0.75rem;
-    padding-top: 0.85rem;
+    gap: 0.8rem;
+    padding: 0.82rem 0;
     border-top: 1px dashed var(--border);
   }
 
-  .task-check {
-    width: 22px;
-    height: 22px;
-    border-radius: 50%;
+  :global(.plan-check) {
+    width: 20px;
+    height: 20px;
+    border-radius: 5px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     font-size: 0.75rem;
     font-weight: 700;
     flex-shrink: 0;
-    margin-top: 0.1rem;
+    margin-top: 0.2rem;
   }
 
-  .check-done {
+  :global(.check-todo) {
+    border: 1.5px solid var(--border-strong);
+    background: var(--bg);
+    color: transparent;
+  }
+
+  :global(.check-done) {
+    border: 1.5px solid var(--emerald);
     background: var(--emerald-soft);
     color: var(--emerald);
   }
 
-  .check-in-progress {
-    background: var(--accent-soft);
-    color: var(--accent);
+  :global(.plan-check-btn) {
+    cursor: pointer;
+    padding: 0;
+    transition: transform 0.12s ease, border-color 0.12s ease;
   }
 
-  .check-planned {
-    background: var(--bg-subtle);
-    color: var(--text-muted);
+  :global(.plan-check-btn:hover) {
+    border-color: var(--accent);
+    transform: scale(1.06);
   }
 
-  .task-body {
+  :global(.plan-item-body) {
     flex: 1;
+    min-width: 0;
   }
 
-  .task-top {
+  :global(.plan-item-topline) {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
@@ -366,20 +1059,253 @@ const { now, phases } = roadmapData;
     gap: 0.5rem;
   }
 
-  .task-name {
-    font-weight: 600;
-    font-size: 0.94rem;
+  :global(.plan-item-text) {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--text);
+    line-height: 1.45;
   }
 
-  .task-desc {
-    margin: 0.25rem 0 0;
-    font-size: 0.86rem;
+  :global(.plan-item-row.is-done .plan-item-text) {
+    color: var(--text-muted);
+    text-decoration: line-through;
+    text-decoration-color: var(--border-strong);
+  }
+
+  :global(.plan-item-detail) {
+    margin: 0.22rem 0 0;
+    font-size: 0.85rem;
     color: var(--text-secondary);
-    line-height: 1.55;
+    line-height: 1.52;
   }
 
-  @media (max-width: 760px) {
-    .shelf-grid {
+  /* Inline Edit Controls */
+  :global(.edit-sec-topbar) {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+  }
+
+  :global(.edit-input) {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--bg);
+    color: var(--text);
+    padding: 0.42rem 0.65rem;
+    font-family: var(--font-sans);
+    font-size: 0.88rem;
+    outline: none;
+    transition: border-color 0.15s ease;
+  }
+
+  :global(.edit-input:focus) {
+    border-color: var(--accent);
+  }
+
+  :global(.edit-period-input) {
+    font-family: var(--font-mono);
+    font-size: 0.76rem;
+    min-width: 240px;
+  }
+
+  :global(.edit-sec-title-input) {
+    width: 100%;
+    font-family: var(--font-serif);
+    font-size: 1.22rem;
+    font-weight: 500;
+    margin-bottom: 0.45rem;
+  }
+
+  :global(.edit-sec-note-input) {
+    width: 100%;
+    color: var(--text-secondary);
+    font-size: 0.86rem;
+  }
+
+  :global(.edit-item-row) {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.7rem;
+    padding: 0.75rem 0;
+    border-top: 1px dashed var(--border);
+  }
+
+  :global(.edit-item-fields) {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    min-width: 0;
+  }
+
+  :global(.edit-item-row1) {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 120px;
+    gap: 0.45rem;
+  }
+
+  :global(.edit-item-tag) {
+    font-family: var(--font-mono);
+    font-size: 0.76rem;
+  }
+
+  :global(.edit-item-detail) {
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+  }
+
+  :global(.edit-row-btns),
+  :global(.edit-item-actions) {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+
+  :global(.mini-icon-btn) {
+    padding: 0.26rem 0.5rem;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    background: var(--bg-subtle);
+    color: var(--text-secondary);
+    font-family: var(--font-mono);
+    font-size: 0.73rem;
+    cursor: pointer;
+  }
+
+  :global(.mini-icon-btn:hover:not(:disabled)) {
+    border-color: var(--border-strong);
+    color: var(--text);
+  }
+
+  :global(.mini-icon-btn:disabled) {
+    opacity: 0.38;
+    cursor: default;
+  }
+
+  :global(.mini-danger:hover:not(:disabled)) {
+    border-color: var(--vermilion);
+    color: var(--vermilion);
+  }
+
+  :global(.add-item-btn) {
+    margin-top: 0.75rem;
+    width: 100%;
+    padding: 0.5rem;
+    border-radius: var(--radius-sm);
+    border: 1px dashed var(--border-strong);
+    background: transparent;
+    color: var(--text-secondary);
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+
+  :global(.add-item-btn:hover) {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--accent-soft);
+  }
+
+  /* Auth Modal */
+  .auth-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    background: rgba(10, 12, 16, 0.72);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.25rem;
+  }
+
+  .auth-dialog {
+    width: 100%;
+    max-width: 500px;
+    padding: 1.5rem 1.65rem;
+  }
+
+  .auth-dialog-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.75rem;
+  }
+
+  .auth-dialog-head h2 {
+    font-family: var(--font-serif);
+    font-size: 1.4rem;
+    font-weight: 500;
+    margin: 0;
+  }
+
+  .icon-close {
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 1rem;
+    cursor: pointer;
+  }
+
+  .auth-desc {
+    margin: 0 0 0.8rem;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    line-height: 1.6;
+  }
+
+  .auth-steps {
+    margin: 0 0 1.1rem;
+    padding-left: 1.25rem;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    line-height: 1.65;
+  }
+
+  .auth-steps code,
+  .auth-desc code {
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    background: var(--bg-subtle);
+    padding: 0.1rem 0.35rem;
+    border-radius: 4px;
+  }
+
+  .token-input {
+    width: 100%;
+    padding: 0.58rem 0.8rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .token-input:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+
+  .auth-error {
+    margin: 0 0 0.75rem;
+    font-size: 0.83rem;
+    color: var(--vermilion);
+  }
+
+  .auth-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+  }
+
+  @media (max-width: 640px) {
+    :global(.edit-item-row1) {
       grid-template-columns: 1fr;
     }
   }

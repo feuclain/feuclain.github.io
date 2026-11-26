@@ -2,62 +2,277 @@
 import { getCollection } from 'astro:content';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import site from '../data/site.json';
-import timelineData from '../data/timeline.json';
-import roadmapData from '../data/roadmap.json';
 import { CATEGORY_META, formatDate, estimateReadingTime } from '../utils/format';
 
 const allPosts = (await getCollection('writing', ({ data }) => !data.draft)).sort(
   (a, b) => b.data.date.valueOf() - a.data.date.valueOf()
 );
 const recentPosts = allPosts.slice(0, 4);
-const recentMilestones = timelineData.milestones.slice(0, 4);
 ---
 
 <BaseLayout>
-  <section class="hero">
-    <div class="status-pill">
-      <span class="status-dot"></span>
-      <span>{site.statusBadge}</span>
+  <!-- About & Research Interests (itsuitsuki-inspired academic profile) -->
+  <section id="about" class="about-section">
+    <div class="about-top">
+      <div class="about-main">
+        <h1 class="about-name">{site.name}</h1>
+        <div class="about-divider"></div>
+
+        <div class="about-affil">
+          <svg
+            width="15"
+            height="15"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+          </svg>
+          <span>{site.role}</span>
+          <span class="affil-sep">·</span>
+          <a href={site.affiliation.url} target="_blank" rel="noreferrer">
+            {site.affiliation.name}
+          </a>
+        </div>
+
+        <div class="about-edu">{site.educationSummary}</div>
+
+        <p class="about-bio">{site.bio}</p>
+
+        <div class="about-quicklinks">
+          <a href="/writing" class="quick-pill">Writing & Notes →</a>
+          <a href="/timeline" class="quick-pill">Timeline</a>
+          <a href="/roadmap" class="quick-pill">Plan</a>
+          {
+            site.links.cv && (
+              <a href={site.links.cv} target="_blank" rel="noreferrer" class="quick-pill">
+                Curriculum Vitae ↗
+              </a>
+            )
+          }
+        </div>
+      </div>
+
+      <div class="about-socials" aria-label="External profiles">
+        {
+          site.links.github && (
+            <a
+              href={site.links.github}
+              target="_blank"
+              rel="noreferrer"
+              class="social-icon-btn"
+              title="GitHub"
+              aria-label="GitHub"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.58.11.79-.25.79-.56 0-.28-.01-1.02-.02-2-3.2.7-3.88-1.54-3.88-1.54-.52-1.33-1.28-1.69-1.28-1.69-1.05-.71.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.76 2.7 1.25 3.36.96.1-.75.4-1.25.73-1.54-2.55-.29-5.24-1.28-5.24-5.68 0-1.25.45-2.28 1.18-3.08-.12-.29-.51-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11.05 11.05 0 0 1 5.77 0c2.2-1.49 3.16-1.18 3.16-1.18.63 1.59.24 2.76.12 3.05.74.8 1.18 1.83 1.18 3.08 0 4.41-2.69 5.38-5.26 5.67.41.36.78 1.06.78 2.14 0 1.55-.01 2.79-.01 3.17 0 .31.21.68.8.56A11.51 11.51 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5Z" />
+              </svg>
+            </a>
+          )
+        }
+        {
+          site.links.lab && (
+            <a
+              href={site.links.lab}
+              target="_blank"
+              rel="noreferrer"
+              class="social-icon-btn"
+              title="Kyoto University NLP Lab"
+              aria-label="Kyoto University NLP Lab"
+            >
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M22 10v6M2 10l10-5 10 5-10 5z"></path>
+                <path d="M6 12v5c3 3 9 3 12 0v-5"></path>
+              </svg>
+            </a>
+          )
+        }
+        {
+          site.links.linkedin && (
+            <a
+              href={site.links.linkedin}
+              target="_blank"
+              rel="noreferrer"
+              class="social-icon-btn"
+              title="LinkedIn"
+              aria-label="LinkedIn"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.88 8.56a1.68 1.68 0 0 0 1.68-1.68c0-.93-.75-1.69-1.68-1.69a1.69 1.69 0 0 0-1.69 1.69c0 .93.76 1.68 1.69 1.68m1.39 9.94v-8.37H5.5v8.37h2.77Z" />
+              </svg>
+            </a>
+          )
+        }
+        {
+          site.links.email && (
+            <a
+              href={site.links.email}
+              class="social-icon-btn"
+              title="Email"
+              aria-label="Email"
+            >
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <rect width="20" height="16" x="2" y="4" rx="2"></rect>
+                <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
+              </svg>
+            </a>
+          )
+        }
+      </div>
     </div>
 
-    <h1 class="hero-title">{site.tagline}</h1>
-    <p class="hero-bio">{site.bio}</p>
+    <div class="interests-prose">
+      <h2>Research Interests</h2>
+      <ul>
+        {site.researchInterests.map((item) => <li set:html={item} />)}
+      </ul>
 
-    <div class="hero-actions">
-      <a href="/writing" class="btn-primary">Read Technical Notes →</a>
-      <a href="/roadmap" class="btn-secondary">Now & Roadmap</a>
-      <a href="/timeline" class="btn-secondary">Journey Timeline</a>
-      <a href={site.links.github} target="_blank" rel="noreferrer" class="btn-ghost">
-        GitHub ↗
-      </a>
+      <h2>Engineering Background & Secondary Interests</h2>
+      {site.secondaryInterestsNote && <p class="interests-note">{site.secondaryInterestsNote}</p>}
+      <ul>
+        {site.secondaryInterests.map((item) => <li set:html={item} />)}
+      </ul>
     </div>
   </section>
 
-  <section>
-    <div class="section-heading">
-      <h2>Focus Areas</h2>
-      <span class="section-link">NJU SE → KyotoU NLP</span>
-    </div>
-    <div class="grid-3">
-      {
-        site.focusAreas.map((area) => (
-          <div class="card">
-            <div class="focus-label">{area.label}</div>
-            <h3 class="focus-title">{area.title}</h3>
-            <p class="focus-desc">{area.description}</p>
+  <!-- Optional Publications (automatically rendered once populated in site.json) -->
+  {
+    site.publications && site.publications.length > 0 && (
+      <section id="publications" class="split-section">
+        <div class="split-label">
+          <h2>Publications</h2>
+        </div>
+        <div class="split-body">
+          <div class="pub-stack">
+            {site.publications.map((pub: any) => (
+              <div class="card pub-card">
+                <h3 class="pub-title">{pub.title}</h3>
+                <div class="pub-venue">{pub.venue}</div>
+                <div class="pub-authors" set:html={pub.authors} />
+              </div>
+            ))}
           </div>
-        ))
-      }
+        </div>
+      </section>
+    )
+  }
+
+  <!-- Selected Projects -->
+  <section id="projects" class="split-section">
+    <div class="split-label">
+      <h2>Projects</h2>
+    </div>
+    <div class="split-body">
+      <div class="projects-grid">
+        {
+          site.projects.map((project) => {
+            const primaryHref = project.url || project.repoUrl || '';
+            return (
+              <article class="card project-card">
+                {project.image && (
+                  <a
+                    href={primaryHref || undefined}
+                    class="project-thumb-link"
+                    target={primaryHref.startsWith('http') ? '_blank' : undefined}
+                    rel={primaryHref.startsWith('http') ? 'noreferrer' : undefined}
+                  >
+                    <img
+                      src={project.image}
+                      alt={project.title}
+                      class="project-thumb"
+                      loading="lazy"
+                    />
+                  </a>
+                )}
+                <div class="project-body">
+                  <h3 class="project-title">
+                    {primaryHref ? (
+                      <a
+                        href={primaryHref}
+                        target={primaryHref.startsWith('http') ? '_blank' : undefined}
+                        rel={primaryHref.startsWith('http') ? 'noreferrer' : undefined}
+                      >
+                        {project.title}
+                      </a>
+                    ) : (
+                      project.title
+                    )}
+                  </h3>
+                  <p class="project-summary">{project.summary}</p>
+                  <div class="project-meta">
+                    <div>
+                      {project.repoUrl ? (
+                        <a href={project.repoUrl} target="_blank" rel="noreferrer">
+                          {project.context}
+                        </a>
+                      ) : (
+                        <span>{project.context}</span>
+                      )}
+                      {project.organization && <span> · {project.organization}</span>}
+                    </div>
+                    <div class="project-period">{project.period}</div>
+                  </div>
+                </div>
+              </article>
+            );
+          })
+        }
+      </div>
     </div>
   </section>
 
-  <section>
-    <div class="section-heading">
-      <h2>Latest Writing</h2>
-      <a href="/writing" class="section-link">All {allPosts.length} posts →</a>
+  <!-- Activities / News -->
+  <section id="activities" class="split-section">
+    <div class="split-label">
+      <h2>Activities</h2>
+      <a href="/timeline" class="split-more">Full Timeline →</a>
+    </div>
+    <div class="split-body">
+      <ul class="activity-list">
+        {
+          site.activities.map((act) => (
+            <li>
+              <strong class="activity-date">{act.date}</strong>
+              <span class="activity-sep">:</span>
+              <span set:html={act.html} />
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </section>
+
+  <!-- Recent Posts -->
+  <section id="recent-posts" class="recent-section">
+    <div class="section-heading" style="margin-top: 0;">
+      <h2>Recent Posts</h2>
+      <a href="/writing" class="section-link">Read More ({allPosts.length}) →</a>
     </div>
 
-    <div class="post-list">
+    <div class="recent-grid">
       {
         recentPosts.map((post) => {
           const cat = CATEGORY_META[post.data.category] ?? {
@@ -66,20 +281,30 @@ const recentMilestones = timelineData.milestones.slice(0, 4);
           };
           const readTime = post.data.readingTime || estimateReadingTime(post.body);
           return (
-            <a href={`/writing/${post.slug}`} class="post-item" aria-label={post.data.title}>
-              <div class="post-meta">
-                <span>{formatDate(post.data.date)}</span>
-                <span>·</span>
-                <span class:list={['badge', cat.badgeClass]}>{cat.label}</span>
-                <span>·</span>
-                <span>{readTime}</span>
-              </div>
-              <h3 class="post-title">{post.data.title}</h3>
-              <p class="post-summary">{post.data.summary}</p>
-              <div class="tag-row">
-                {post.data.tags.map((tag) => (
-                  <span class="tag-chip">#{tag}</span>
-                ))}
+            <a href={`/writing/${post.slug}`} class="post-card" aria-label={post.data.title}>
+              {post.data.cover && (
+                <img
+                  src={post.data.cover}
+                  alt={post.data.title}
+                  class="post-card-cover"
+                  loading="lazy"
+                />
+              )}
+              <div class="post-card-body">
+                <div class="post-meta">
+                  <span>{formatDate(post.data.date)}</span>
+                  <span>·</span>
+                  <span class:list={['badge', cat.badgeClass]}>{cat.label}</span>
+                  <span>·</span>
+                  <span>{readTime}</span>
+                </div>
+                <h3 class="post-title">{post.data.title}</h3>
+                <p class="post-summary">{post.data.summary}</p>
+                <div class="tag-row">
+                  {post.data.tags.map((tag) => (
+                    <span class="tag-chip">#{tag}</span>
+                  ))}
+                </div>
               </div>
             </a>
           );
@@ -87,248 +312,425 @@ const recentMilestones = timelineData.milestones.slice(0, 4);
       }
     </div>
   </section>
-
-  <section>
-    <div class="grid-2" style="margin-top: 3.25rem;">
-      <div class="card">
-        <div class="mini-header">
-          <div>
-            <span class="eyebrow" style="margin-bottom: 0.25rem;">ACTIVE SPRINT</span>
-            <h2 class="mini-title">What I'm Doing Now</h2>
-          </div>
-          <a href="/roadmap" class="section-link">Full Plan →</a>
-        </div>
-        <p class="mini-desc">{roadmapData.now.summary}</p>
-        <div class="sprint-list">
-          {
-            roadmapData.now.tracks.map((track) => (
-              <div class="sprint-item">
-                <div class="sprint-row">
-                  <span class="sprint-name">{track.title}</span>
-                  <span class="sprint-pct">{track.progress}%</span>
-                </div>
-                <div class="progress-track">
-                  <div class="progress-fill" style={`width: ${track.progress}%`} />
-                </div>
-              </div>
-            ))
-          }
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="mini-header">
-          <div>
-            <span class="eyebrow" style="margin-bottom: 0.25rem;">RECENT LOG</span>
-            <h2 class="mini-title">Journey Milestones</h2>
-          </div>
-          <a href="/timeline" class="section-link">Full Timeline →</a>
-        </div>
-        <ul class="mini-timeline">
-          {
-            recentMilestones.map((m) => (
-              <li>
-                <span class="mini-date">{m.date}</span>
-                <div>
-                  <div class="mini-m-title">{m.title}</div>
-                  <div class="mini-m-note">{m.note}</div>
-                </div>
-              </li>
-            ))
-          }
-        </ul>
-      </div>
-    </div>
-  </section>
 </BaseLayout>
 
 <style>
-  .hero {
-    padding: 1rem 0 1.75rem;
+  .about-section {
+    padding-bottom: 2.5rem;
+    border-bottom: 1px solid var(--border);
   }
 
-  .hero-title {
+  .about-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 2rem;
+    margin-bottom: 2rem;
+  }
+
+  .about-main {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .about-name {
     font-family: var(--font-serif);
-    font-size: clamp(2.2rem, 5vw, 3.25rem);
-    font-weight: 500;
-    line-height: 1.12;
-    letter-spacing: -0.03em;
-    margin: 0 0 1.15rem;
-    max-width: 760px;
+    font-size: clamp(2.1rem, 4.5vw, 2.85rem);
+    font-weight: 600;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    margin: 0 0 0.75rem;
   }
 
-  .hero-bio {
-    font-size: 1.08rem;
-    line-height: 1.75;
-    color: var(--text-secondary);
-    max-width: 680px;
-    margin: 0 0 1.75rem;
+  .about-divider {
+    width: 84px;
+    height: 2px;
+    background: var(--border-strong);
+    margin-bottom: 1rem;
   }
 
-  .hero-actions {
+  .about-affil {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 0.7rem;
+    gap: 0.45rem;
+    font-size: 0.96rem;
+    color: var(--text);
+    font-weight: 500;
   }
 
-  .btn-primary,
-  .btn-secondary,
-  .btn-ghost {
+  .about-affil svg {
+    color: var(--text-muted);
+    flex-shrink: 0;
+  }
+
+  .affil-sep {
+    color: var(--text-muted);
+  }
+
+  .about-edu {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    margin-top: 0.3rem;
+    font-family: var(--font-mono);
+  }
+
+  .about-bio {
+    font-size: 1.02rem;
+    line-height: 1.75;
+    color: var(--text-secondary);
+    max-width: 720px;
+    margin: 1.15rem 0 1.25rem;
+  }
+
+  .about-quicklinks {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.55rem;
+  }
+
+  .quick-pill {
     display: inline-flex;
     align-items: center;
-    padding: 0.56rem 1.08rem;
+    padding: 0.36rem 0.82rem;
     border-radius: var(--radius-sm);
-    font-size: 0.9rem;
+    border: 1px solid var(--border);
+    background: var(--bg-elevated);
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
     font-weight: 500;
-    transition: all 0.16s ease;
+    transition: border-color 0.15s ease, color 0.15s ease, background-color 0.15s ease;
   }
 
-  .btn-primary {
+  .quick-pill:first-child {
     background: var(--accent);
+    border-color: var(--accent);
     color: #ffffff;
-    border: 1px solid var(--accent);
   }
 
-  [data-theme='dark'] .btn-primary {
+  [data-theme='dark'] .quick-pill:first-child {
     color: #0f1115;
   }
 
-  .btn-primary:hover {
+  .quick-pill:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .quick-pill:first-child:hover {
     background: var(--accent-hover);
     border-color: var(--accent-hover);
     color: #ffffff;
   }
 
-  [data-theme='dark'] .btn-primary:hover {
+  [data-theme='dark'] .quick-pill:first-child:hover {
     color: #0f1115;
   }
 
-  .btn-secondary {
-    background: var(--bg-elevated);
-    color: var(--text);
-    border: 1px solid var(--border);
-  }
-
-  .btn-secondary:hover {
-    border-color: var(--border-strong);
-    color: var(--accent);
-  }
-
-  .btn-ghost {
-    color: var(--text-secondary);
-    padding-left: 0.6rem;
-    padding-right: 0.6rem;
-  }
-
-  .btn-ghost:hover {
-    color: var(--accent);
-  }
-
-  .focus-label {
-    font-family: var(--font-mono);
-    font-size: 0.72rem;
-    color: var(--accent);
-    margin-bottom: 0.55rem;
-    letter-spacing: 0.04em;
-  }
-
-  .focus-title {
-    font-family: var(--font-serif);
-    font-size: 1.2rem;
-    font-weight: 500;
-    margin: 0 0 0.5rem;
-  }
-
-  .focus-desc {
-    margin: 0;
-    font-size: 0.9rem;
-    color: var(--text-secondary);
-    line-height: 1.6;
-  }
-
-  .mini-header {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 1rem;
-    margin-bottom: 0.75rem;
-  }
-
-  .mini-title {
-    font-family: var(--font-serif);
-    font-size: 1.35rem;
-    font-weight: 500;
-    margin: 0;
-  }
-
-  .mini-desc {
-    margin: 0 0 1.2rem;
-    font-size: 0.9rem;
-    color: var(--text-secondary);
-    line-height: 1.6;
-  }
-
-  .sprint-list {
+  .about-socials {
     display: flex;
     flex-direction: column;
-    gap: 0.95rem;
+    gap: 0.55rem;
+    padding-top: 0.25rem;
   }
 
-  .sprint-row {
-    display: flex;
-    justify-content: space-between;
-    font-size: 0.86rem;
+  .social-icon-btn {
+    width: 38px;
+    height: 38px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    background: var(--bg-elevated);
+    color: var(--text-secondary);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s ease;
+  }
+
+  .social-icon-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    transform: translateY(-1px);
+  }
+
+  .interests-prose h2 {
+    font-family: var(--font-serif);
+    font-size: 1.38rem;
     font-weight: 500;
+    margin: 1.6rem 0 0.65rem;
+    color: var(--text);
   }
 
-  .sprint-pct {
+  .interests-prose h2:first-child {
+    margin-top: 0;
+  }
+
+  .interests-note {
+    margin: -0.25rem 0 0.55rem;
+    font-size: 0.86rem;
+    color: var(--text-muted);
+    font-style: italic;
+  }
+
+  .interests-prose ul {
+    margin: 0;
+    padding-left: 1.35rem;
+    color: var(--text-secondary);
+  }
+
+  .interests-prose li {
+    margin-bottom: 0.45rem;
+    line-height: 1.68;
+    font-size: 0.97rem;
+  }
+
+  .interests-prose :global(u) {
+    text-decoration-color: var(--accent);
+    text-underline-offset: 3px;
+    color: var(--text);
+  }
+
+  /* Side-heading split sections (inspired by itsuitsuki / Hugo Eureka) */
+  .split-section {
+    display: grid;
+    grid-template-columns: 190px minmax(0, 1fr);
+    gap: 2rem;
+    padding: 2.5rem 0;
+    border-bottom: 1px solid var(--border);
+    align-items: start;
+  }
+
+  .split-label h2 {
+    font-family: var(--font-serif);
+    font-size: 1.55rem;
+    font-weight: 500;
+    margin: 0;
+    line-height: 1.25;
+  }
+
+  .split-more {
+    display: inline-block;
+    margin-top: 0.55rem;
     font-family: var(--font-mono);
     font-size: 0.78rem;
     color: var(--text-muted);
   }
 
-  .mini-timeline {
+  .split-more:hover {
+    color: var(--accent);
+  }
+
+  .projects-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.15rem;
+  }
+
+  .project-card {
+    padding: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .project-card:hover {
+    border-color: var(--border-strong);
+    box-shadow: var(--shadow-md);
+  }
+
+  .project-thumb-link {
+    display: block;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-subtle);
+  }
+
+  .project-thumb {
+    display: block;
+    width: 100%;
+    height: 156px;
+    object-fit: cover;
+  }
+
+  .project-body {
+    padding: 1.2rem 1.35rem;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+  }
+
+  .project-title {
+    font-family: var(--font-serif);
+    font-size: 1.2rem;
+    font-weight: 500;
+    line-height: 1.32;
+    margin: 0 0 0.5rem;
+  }
+
+  .project-title a {
+    color: var(--text);
+  }
+
+  .project-title a:hover {
+    color: var(--accent);
+  }
+
+  .project-summary {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin: 0 0 1rem;
+    flex: 1;
+  }
+
+  .project-meta {
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+    padding-top: 0.75rem;
+    border-top: 1px dashed var(--border);
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+  }
+
+  .project-period {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--text-muted);
+  }
+
+  .activity-list {
     list-style: none;
     margin: 0;
     padding: 0;
     display: flex;
     flex-direction: column;
-    gap: 0.95rem;
-  }
-
-  .mini-timeline li {
-    display: grid;
-    grid-template-columns: 76px 1fr;
     gap: 0.75rem;
-    align-items: start;
-    padding-bottom: 0.85rem;
-    border-bottom: 1px dashed var(--border);
   }
 
-  .mini-timeline li:last-child {
-    border-bottom: none;
-    padding-bottom: 0;
-  }
-
-  .mini-date {
-    font-family: var(--font-mono);
-    font-size: 0.74rem;
-    color: var(--text-muted);
-    padding-top: 0.15rem;
-  }
-
-  .mini-m-title {
-    font-size: 0.92rem;
-    font-weight: 600;
-    color: var(--text);
-    line-height: 1.35;
-  }
-
-  .mini-m-note {
-    font-size: 0.84rem;
+  .activity-list li {
+    font-size: 0.96rem;
+    line-height: 1.65;
     color: var(--text-secondary);
-    margin-top: 0.2rem;
-    line-height: 1.5;
+    padding-left: 1rem;
+    position: relative;
+  }
+
+  .activity-list li::before {
+    content: '•';
+    position: absolute;
+    left: 0;
+    color: var(--accent);
+    font-weight: 700;
+  }
+
+  .activity-date {
+    font-family: var(--font-mono);
+    font-size: 0.86rem;
+    color: var(--text);
+    font-weight: 600;
+  }
+
+  .activity-sep {
+    margin-right: 0.35rem;
+    color: var(--text-muted);
+  }
+
+  .recent-section {
+    padding-top: 2.5rem;
+  }
+
+  .recent-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.15rem;
+  }
+
+  .post-card {
+    display: flex;
+    flex-direction: column;
+    color: inherit;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    transition: border-color 0.16s ease, transform 0.16s ease, box-shadow 0.16s ease;
+  }
+
+  .post-card:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+    color: inherit;
+  }
+
+  .post-card-cover {
+    width: 100%;
+    height: 160px;
+    object-fit: cover;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-subtle);
+  }
+
+  .post-card-body {
+    padding: 1.25rem 1.35rem;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+  }
+
+  .post-card-body .post-summary {
+    flex: 1;
+  }
+
+  .pub-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+  }
+
+  .pub-title {
+    font-family: var(--font-serif);
+    font-size: 1.18rem;
+    margin: 0 0 0.35rem;
+  }
+
+  .pub-venue {
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    color: var(--accent);
+    margin-bottom: 0.4rem;
+  }
+
+  .pub-authors {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+  }
+
+  @media (max-width: 820px) {
+    .about-top {
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    .about-socials {
+      flex-direction: row;
+    }
+
+    .split-section {
+      grid-template-columns: 1fr;
+      gap: 1rem;
+      padding: 2rem 0;
+    }
+
+    .split-more {
+      margin-top: 0.25rem;
+      margin-left: 0.75rem;
+    }
+
+    .projects-grid,
+    .recent-grid {
+      grid-template-columns: 1fr;
+    }
   }
 </style>
