@@ -1,0 +1,386 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import roadmapData from '../data/roadmap.json';
+import { STATUS_META } from '../utils/format';
+
+const { now, phases } = roadmapData;
+---
+
+<BaseLayout
+  title="Now & Plan"
+  description="Current learning sprint and multi-quarter roadmap from pre-enrollment through Kyoto University M.S. and career prep."
+>
+  <header class="page-header">
+    <div class="eyebrow">NOW & FUTURE ROADMAP · UPDATED {now.lastUpdated}</div>
+    <h1 class="page-title">Current Focus & Learning Plan</h1>
+    <p class="page-lead">
+      Inspired by the <code>/now</code> page movement. Top half tracks what I am actively
+      shipping this month; bottom half maps my multi-phase plan through Kyoto University
+      and engineering/AI recruiting in Japan.
+    </p>
+  </header>
+
+  <section class="now-banner card">
+    <div class="now-head">
+      <div>
+        <span class="badge badge-in-progress">{now.sprintName}</span>
+        <h2 class="now-title">Active Priorities</h2>
+      </div>
+      <span class="now-meta">Target: {now.targetDate}</span>
+    </div>
+    <p class="now-summary">{now.summary}</p>
+
+    <div class="grid-2" style="margin-top: 1.35rem;">
+      {
+        now.tracks.map((track) => (
+          <div class="track-box">
+            <div class="track-top">
+              <span class="track-title">{track.title}</span>
+              <span class="track-pct">{track.progress}%</span>
+            </div>
+            <p class="track-detail">{track.detail}</p>
+            <div class="progress-track">
+              <div class="progress-fill" style={`width: ${track.progress}%`} />
+            </div>
+          </div>
+        ))
+      }
+    </div>
+
+    <div class="reading-shelf">
+      <div class="shelf-label">CURRENT READING & STUDY SHELF</div>
+      <div class="shelf-grid">
+        {
+          now.readingShelf.map((item) => (
+            <div class="shelf-item">
+              <span class="shelf-kind">{item.kind}</span>
+              <span class="shelf-name">{item.title}</span>
+            </div>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-heading">
+      <h2>Near-Term & Future Roadmap</h2>
+      <div class="filter-tabs" role="tablist" aria-label="Filter roadmap status">
+        <button class="filter-btn active" data-status="all" type="button">All</button>
+        <button class="filter-btn" data-status="in-progress" type="button">
+          In Progress
+        </button>
+        <button class="filter-btn" data-status="planned" type="button">Planned</button>
+        <button class="filter-btn" data-status="done" type="button">Done</button>
+      </div>
+    </div>
+
+    <div class="phase-stack">
+      {
+        phases.map((phase) => {
+          const pMeta = STATUS_META[phase.status] ?? STATUS_META.planned;
+          return (
+            <div class="card phase-card" data-phase-status={phase.status}>
+              <div class="phase-header">
+                <div>
+                  <div class="phase-period">{phase.period}</div>
+                  <h3 class="phase-title">{phase.title}</h3>
+                </div>
+                <span class:list={['badge', pMeta.badgeClass]}>{pMeta.label}</span>
+              </div>
+              <p class="phase-goal">{phase.goal}</p>
+
+              <ul class="task-list">
+                {phase.items.map((task) => {
+                  const tMeta = STATUS_META[task.status] ?? STATUS_META.planned;
+                  return (
+                    <li class="task-row" data-task-status={task.status}>
+                      <span class:list={['task-check', `check-${task.status}`]}>
+                        {task.status === 'done'
+                          ? '✓'
+                          : task.status === 'in-progress'
+                            ? '●'
+                            : '○'}
+                      </span>
+                      <div class="task-body">
+                        <div class="task-top">
+                          <span class="task-name">{task.title}</span>
+                          <span class:list={['badge', tMeta.badgeClass]}>
+                            {tMeta.label}
+                          </span>
+                        </div>
+                        <p class="task-desc">{task.detail}</p>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          );
+        })
+      }
+    </div>
+    <p id="roadmap-empty" class="empty-state" hidden>
+      No roadmap items currently match this status.
+    </p>
+  </section>
+
+  <script is:inline>
+    const filterBtns = document.querySelectorAll('.filter-btn');
+    const phaseCards = document.querySelectorAll('.phase-card');
+    const emptyMsg = document.getElementById('roadmap-empty');
+
+    filterBtns.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        filterBtns.forEach((b) => b.classList.remove('active'));
+        btn.classList.add('active');
+        const status = btn.getAttribute('data-status');
+        let totalVisible = 0;
+
+        phaseCards.forEach((card) => {
+          const rows = card.querySelectorAll('.task-row');
+          let visibleInPhase = 0;
+
+          rows.forEach((row) => {
+            const rowStatus = row.getAttribute('data-task-status');
+            const show = status === 'all' || rowStatus === status;
+            row.style.display = show ? 'flex' : 'none';
+            if (show) visibleInPhase++;
+          });
+
+          const showCard = status === 'all' || visibleInPhase > 0;
+          card.style.display = showCard ? 'block' : 'none';
+          if (showCard) totalVisible++;
+        });
+
+        if (emptyMsg) {
+          emptyMsg.hidden = totalVisible > 0;
+        }
+      });
+    });
+  </script>
+</BaseLayout>
+
+<style>
+  .now-banner {
+    padding: 1.65rem 1.75rem;
+  }
+
+  .now-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  .now-title {
+    font-family: var(--font-serif);
+    font-size: 1.55rem;
+    font-weight: 500;
+    margin: 0.45rem 0 0;
+  }
+
+  .now-meta {
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    color: var(--text-muted);
+  }
+
+  .now-summary {
+    margin: 0.75rem 0 0;
+    color: var(--text-secondary);
+    font-size: 0.96rem;
+    max-width: 720px;
+  }
+
+  .track-box {
+    padding: 1rem 1.1rem;
+    border-radius: var(--radius-sm);
+    background: var(--bg-subtle);
+    border: 1px solid var(--border);
+  }
+
+  .track-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 0.5rem;
+  }
+
+  .track-title {
+    font-weight: 600;
+    font-size: 0.93rem;
+  }
+
+  .track-pct {
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  .track-detail {
+    margin: 0.35rem 0 0.25rem;
+    font-size: 0.84rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+  }
+
+  .reading-shelf {
+    margin-top: 1.5rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--border);
+  }
+
+  .shelf-label {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+    margin-bottom: 0.75rem;
+  }
+
+  .shelf-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.75rem;
+  }
+
+  .shelf-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    padding: 0.7rem 0.85rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--bg);
+  }
+
+  .shelf-kind {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+
+  .shelf-name {
+    font-size: 0.85rem;
+    font-weight: 500;
+    line-height: 1.4;
+  }
+
+  .phase-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+
+  .phase-card {
+    padding: 1.5rem 1.6rem;
+  }
+
+  .phase-header {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .phase-period {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--accent);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .phase-title {
+    font-family: var(--font-serif);
+    font-size: 1.4rem;
+    font-weight: 500;
+    margin: 0.25rem 0 0;
+  }
+
+  .phase-goal {
+    margin: 0.6rem 0 1.15rem;
+    color: var(--text-secondary);
+    font-size: 0.93rem;
+  }
+
+  .task-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+  }
+
+  .task-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding-top: 0.85rem;
+    border-top: 1px dashed var(--border);
+  }
+
+  .task-check {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 700;
+    flex-shrink: 0;
+    margin-top: 0.1rem;
+  }
+
+  .check-done {
+    background: var(--emerald-soft);
+    color: var(--emerald);
+  }
+
+  .check-in-progress {
+    background: var(--accent-soft);
+    color: var(--accent);
+  }
+
+  .check-planned {
+    background: var(--bg-subtle);
+    color: var(--text-muted);
+  }
+
+  .task-body {
+    flex: 1;
+  }
+
+  .task-top {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+
+  .task-name {
+    font-weight: 600;
+    font-size: 0.94rem;
+  }
+
+  .task-desc {
+    margin: 0.25rem 0 0;
+    font-size: 0.86rem;
+    color: var(--text-secondary);
+    line-height: 1.55;
+  }
+
+  @media (max-width: 760px) {
+    .shelf-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

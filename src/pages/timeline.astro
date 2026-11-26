@@ -1,0 +1,214 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import timelineData from '../data/timeline.json';
+import { CATEGORY_META } from '../utils/format';
+
+const totalPosts = (await getCollection('writing', ({ data }) => !data.draft)).length;
+const milestones = timelineData.milestones;
+
+const stats = [
+  { label: 'Milestones Logged', value: String(milestones.length) },
+  { label: 'English Notes', value: String(totalPosts) },
+  { label: 'LeetCode Logged', value: timelineData.stats.leetcodeSolved },
+  { label: 'Enrollment Target', value: timelineData.stats.targetEnrollment },
+];
+
+const categories = ['all', 'ai-llm', 'algorithms', 'academic', 'japan'];
+---
+
+<BaseLayout
+  title="Timeline"
+  description="A chronological log of completed milestones, experiments, coursework, and steps toward Kyoto University NLP."
+>
+  <header class="page-header">
+    <div class="eyebrow">CHRONOLOGICAL LOG</div>
+    <h1 class="page-title">Journey & Completed Milestones</h1>
+    <p class="page-lead">
+      A verifiable paper trail of what I have actually built, read, and shipped — from
+      Nanjing University Software Engineering to Kyoto University's NLP Lab.
+    </p>
+  </header>
+
+  <section class="stats-grid">
+    {
+      stats.map((s) => (
+        <div class="card stat-card">
+          <div class="stat-value">{s.value}</div>
+          <div class="stat-label">{s.label}</div>
+        </div>
+      ))
+    }
+  </section>
+
+  <div class="controls-bar" style="margin-top: 2rem;">
+    <div class="filter-tabs" role="tablist" aria-label="Filter timeline">
+      {
+        categories.map((cat) => (
+          <button
+            class:list={['filter-btn', { active: cat === 'all' }]}
+            data-cat={cat}
+            type="button"
+          >
+            {cat === 'all' ? 'All' : (CATEGORY_META[cat]?.label ?? cat)}
+          </button>
+        ))
+      }
+    </div>
+  </div>
+
+  <ol class="timeline-track" id="timeline-list">
+    {
+      milestones.map((item) => {
+        const meta = CATEGORY_META[item.category] ?? {
+          label: item.category,
+          badgeClass: 'badge-ai-llm',
+        };
+        return (
+          <li class="timeline-entry" data-cat={item.category}>
+            <div class:list={['timeline-dot', `dot-${item.category}`]} />
+            <div class="card timeline-card">
+              <div class="post-meta">
+                <span class="timeline-date">{item.date}</span>
+                <span>·</span>
+                <span class:list={['badge', meta.badgeClass]}>{meta.label}</span>
+              </div>
+              <h2 class="timeline-title">{item.title}</h2>
+              <p class="timeline-note">{item.note}</p>
+              {item.link && (
+                <a
+                  href={item.link.url}
+                  class="timeline-link"
+                  target={item.link.url.startsWith('http') ? '_blank' : undefined}
+                  rel={item.link.url.startsWith('http') ? 'noreferrer' : undefined}
+                >
+                  {item.link.label} →
+                </a>
+              )}
+            </div>
+          </li>
+        );
+      })
+    }
+  </ol>
+
+  <script is:inline>
+    const buttons = document.querySelectorAll('.filter-btn');
+    const entries = document.querySelectorAll('#timeline-list .timeline-entry');
+
+    buttons.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        buttons.forEach((b) => b.classList.remove('active'));
+        btn.classList.add('active');
+        const selected = btn.getAttribute('data-cat');
+        entries.forEach((el) => {
+          const cat = el.getAttribute('data-cat');
+          el.style.display = selected === 'all' || cat === selected ? 'block' : 'none';
+        });
+      });
+    });
+  </script>
+</BaseLayout>
+
+<style>
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.9rem;
+  }
+
+  .stat-card {
+    padding: 1.05rem 1.2rem;
+  }
+
+  .stat-value {
+    font-family: var(--font-serif);
+    font-size: 1.7rem;
+    font-weight: 500;
+    line-height: 1.15;
+    color: var(--text);
+  }
+
+  .stat-label {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    margin-top: 0.35rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .timeline-track {
+    list-style: none;
+    margin: 1.5rem 0 0;
+    padding: 0 0 0 1.6rem;
+    border-left: 2px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+
+  .timeline-entry {
+    position: relative;
+  }
+
+  .timeline-dot {
+    position: absolute;
+    left: calc(-1.6rem - 7px);
+    top: 1.45rem;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--accent);
+    border: 2px solid var(--bg);
+    box-shadow: 0 0 0 2px var(--border);
+  }
+
+  .dot-algorithms {
+    background: var(--emerald);
+  }
+
+  .dot-academic {
+    background: var(--purple);
+  }
+
+  .dot-japan {
+    background: var(--amber);
+  }
+
+  .timeline-card {
+    padding: 1.15rem 1.35rem;
+  }
+
+  .timeline-date {
+    font-weight: 600;
+    color: var(--text-secondary);
+  }
+
+  .timeline-title {
+    font-family: var(--font-serif);
+    font-size: 1.25rem;
+    font-weight: 500;
+    margin: 0.25rem 0 0.4rem;
+  }
+
+  .timeline-note {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 0.93rem;
+    line-height: 1.62;
+  }
+
+  .timeline-link {
+    display: inline-block;
+    margin-top: 0.7rem;
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+  }
+
+  @media (max-width: 760px) {
+    .stats-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+</style>

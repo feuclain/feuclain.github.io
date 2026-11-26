@@ -1,0 +1,154 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { CATEGORY_META, formatDate, estimateReadingTime } from '../../utils/format';
+
+const posts = (await getCollection('writing', ({ data }) => !data.draft)).sort(
+  (a, b) => b.data.date.valueOf() - a.data.date.valueOf()
+);
+
+const counts = {
+  all: posts.length,
+  'ai-llm': posts.filter((p) => p.data.category === 'ai-llm').length,
+  algorithms: posts.filter((p) => p.data.category === 'algorithms').length,
+  essays: posts.filter((p) => p.data.category === 'essays').length,
+};
+---
+
+<BaseLayout
+  title="Writing"
+  description="English notes on AI, NLP, LLMs, LeetCode interview solutions, and essays."
+>
+  <header class="page-header">
+    <div class="eyebrow">WRITING & STUDY LOGS</div>
+    <h1 class="page-title">Notes, Implementations & Essays</h1>
+    <p class="page-lead">
+      Documenting my journey from zero to Kyoto University NLP — from-scratch PyTorch
+      notes, LLM paper breakdowns, think-aloud algorithm solutions, and occasional essays.
+      Written in English to sharpen both research writing and technical communication.
+    </p>
+  </header>
+
+  <div class="controls-bar">
+    <div class="filter-tabs" role="tablist" aria-label="Filter posts by category">
+      <button class="filter-btn active" data-category="all" type="button">
+        All ({counts.all})
+      </button>
+      <button class="filter-btn" data-category="ai-llm" type="button">
+        AI / LLM ({counts['ai-llm']})
+      </button>
+      <button class="filter-btn" data-category="algorithms" type="button">
+        Algorithms ({counts.algorithms})
+      </button>
+      <button class="filter-btn" data-category="essays" type="button">
+        Essays ({counts.essays})
+      </button>
+    </div>
+
+    <input
+      id="post-search"
+      class="search-input"
+      type="search"
+      placeholder="Search title, tags, topics..."
+      aria-label="Search articles"
+    />
+  </div>
+
+  <div id="post-list" class="post-list">
+    {
+      posts.map((post) => {
+        const cat = CATEGORY_META[post.data.category] ?? {
+          label: post.data.category,
+          badgeClass: 'badge-ai-llm',
+        };
+        const readTime = post.data.readingTime || estimateReadingTime(post.body);
+        const searchIndex = [
+          post.data.title,
+          post.data.summary,
+          post.data.tags.join(' '),
+          cat.label,
+        ]
+          .join(' ')
+          .toLowerCase();
+
+        return (
+          <a
+            href={`/writing/${post.slug}`}
+            class="post-item"
+            aria-label={post.data.title}
+            data-category={post.data.category}
+            data-search={searchIndex}
+          >
+            <div class="post-meta">
+              <span>{formatDate(post.data.date)}</span>
+              <span>·</span>
+              <span class:list={['badge', cat.badgeClass]}>{cat.label}</span>
+              <span>·</span>
+              <span>{readTime}</span>
+            </div>
+            <h2 class="post-title">{post.data.title}</h2>
+            <p class="post-summary">{post.data.summary}</p>
+            <div class="tag-row">
+              {post.data.tags.map((tag) => (
+                <span class="tag-chip">#{tag}</span>
+              ))}
+            </div>
+          </a>
+        );
+      })
+    }
+  </div>
+
+  <p id="empty-state" class="empty-state" hidden>
+    No articles matched your filter. Try another category or keyword.
+  </p>
+
+  <script is:inline>
+    const buttons = document.querySelectorAll('.filter-btn');
+    const searchInput = document.getElementById('post-search');
+    const items = document.querySelectorAll('#post-list .post-item');
+    const emptyState = document.getElementById('empty-state');
+
+    let activeCategory = 'all';
+
+    function applyFilter() {
+      const q = (searchInput?.value || '').trim().toLowerCase();
+      let visibleCount = 0;
+
+      items.forEach((el) => {
+        const cat = el.getAttribute('data-category');
+        const haystack = el.getAttribute('data-search') || '';
+        const matchesCat = activeCategory === 'all' || cat === activeCategory;
+        const matchesQuery = !q || haystack.includes(q);
+        const show = matchesCat && matchesQuery;
+        el.style.display = show ? 'block' : 'none';
+        if (show) visibleCount++;
+      });
+
+      if (emptyState) {
+        emptyState.hidden = visibleCount > 0;
+      }
+    }
+
+    buttons.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        buttons.forEach((b) => b.classList.remove('active'));
+        btn.classList.add('active');
+        activeCategory = btn.getAttribute('data-category') || 'all';
+        applyFilter();
+      });
+    });
+
+    searchInput?.addEventListener('input', applyFilter);
+  </script>
+</BaseLayout>
+
+<style>
+  .empty-state {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 0.88rem;
+  }
+</style>

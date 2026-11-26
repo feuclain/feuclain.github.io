@@ -1,0 +1,183 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { CATEGORY_META, formatDate, estimateReadingTime } from '../../utils/format';
+
+export async function getStaticPaths() {
+  const posts = (await getCollection('writing', ({ data }) => !data.draft)).sort(
+    (a, b) => b.data.date.valueOf() - a.data.date.valueOf()
+  );
+
+  return posts.map((post, index) => ({
+    params: { slug: post.slug },
+    props: {
+      post,
+      prevPost: posts[index + 1] ?? null,
+      nextPost: posts[index - 1] ?? null,
+    },
+  }));
+}
+
+const { post, prevPost, nextPost } = Astro.props;
+const { Content, headings } = await post.render();
+const tocHeadings = headings.filter((h) => h.depth === 2 || h.depth === 3);
+const cat = CATEGORY_META[post.data.category] ?? {
+  label: post.data.category,
+  badgeClass: 'badge-ai-llm',
+};
+const readTime = post.data.readingTime || estimateReadingTime(post.body);
+---
+
+<BaseLayout title={post.data.title} description={post.data.summary}>
+  <a href="/writing" class="back-link">← Back to Writing</a>
+
+  <article class="article-layout">
+    <div>
+      <header class="article-header">
+        <div class="post-meta">
+          <span>{formatDate(post.data.date)}</span>
+          <span>·</span>
+          <span class:list={['badge', cat.badgeClass]}>{cat.label}</span>
+          <span>·</span>
+          <span>{readTime}</span>
+        </div>
+        <h1>{post.data.title}</h1>
+        <p class="page-lead">{post.data.summary}</p>
+        <div class="tag-row" style="margin-top: 1rem;">
+          {post.data.tags.map((tag) => <span class="tag-chip">#{tag}</span>)}
+        </div>
+      </header>
+
+      <div class="prose" id="article-content">
+        <Content />
+      </div>
+
+      <nav class="post-pager" aria-label="Adjacent posts">
+        {
+          prevPost ? (
+            <a href={`/writing/${prevPost.slug}`} class="pager-card">
+              <span class="pager-label">← Older</span>
+              <span class="pager-title">{prevPost.data.title}</span>
+            </a>
+          ) : (
+            <div />
+          )
+        }
+        {
+          nextPost ? (
+            <a href={`/writing/${nextPost.slug}`} class="pager-card pager-right">
+              <span class="pager-label">Newer →</span>
+              <span class="pager-title">{nextPost.data.title}</span>
+            </a>
+          ) : (
+            <div />
+          )
+        }
+      </nav>
+    </div>
+
+    {
+      tocHeadings.length > 0 && (
+        <aside class="toc-sidebar" aria-label="Table of contents">
+          <div class="toc-title">On This Page</div>
+          <ul class="toc-list">
+            {tocHeadings.map((h) => (
+              <li class={h.depth === 3 ? 'toc-depth-3' : ''}>
+                <a href={`#${h.slug}`}>{h.text}</a>
+              </li>
+            ))}
+          </ul>
+        </aside>
+      )
+    }
+  </article>
+
+  <script is:inline>
+    const container = document.getElementById('article-content');
+    if (container) {
+      container.querySelectorAll('pre').forEach((pre) => {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'code-block-wrapper';
+        pre.parentNode?.insertBefore(wrapper, pre);
+        wrapper.appendChild(pre);
+
+        const btn = document.createElement('button');
+        btn.className = 'copy-code-btn';
+        btn.type = 'button';
+        btn.textContent = 'Copy';
+        btn.addEventListener('click', async () => {
+          const text = pre.innerText;
+          try {
+            await navigator.clipboard.writeText(text);
+            btn.textContent = 'Copied!';
+            setTimeout(() => (btn.textContent = 'Copy'), 1500);
+          } catch {
+            btn.textContent = 'Error';
+          }
+        });
+        wrapper.appendChild(btn);
+      });
+    }
+  </script>
+</BaseLayout>
+
+<style>
+  .back-link {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-bottom: 1.5rem;
+  }
+
+  .back-link:hover {
+    color: var(--accent);
+  }
+
+  .post-pager {
+    margin-top: 3.5rem;
+    padding-top: 1.75rem;
+    border-top: 1px solid var(--border);
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+  }
+
+  .pager-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    padding: 1rem 1.15rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background: var(--bg-elevated);
+    color: inherit;
+  }
+
+  .pager-card:hover {
+    border-color: var(--accent);
+    color: inherit;
+  }
+
+  .pager-right {
+    text-align: right;
+  }
+
+  .pager-label {
+    font-family: var(--font-mono);
+    font-size: 0.73rem;
+    color: var(--text-muted);
+  }
+
+  .pager-title {
+    font-weight: 500;
+    font-size: 0.92rem;
+    line-height: 1.35;
+  }
+
+  @media (max-width: 640px) {
+    .post-pager {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

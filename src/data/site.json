@@ -1,0 +1,32 @@
+{
+  "name": "feuclain",
+  "handle": "feuclain",
+  "title": "feuclain — AI, NLP & Engineering Notes",
+  "tagline": "From Software Engineering to Kyoto University NLP.",
+  "statusBadge": "Incoming M.S. Student · Kyoto University NLP Lab · Apr 2027",
+  "location": "Nanjing → Kyoto",
+  "bio": "B.Eng. in Software Engineering from Nanjing University. Incoming Master's student at the Language Media Processing Laboratory (NLP Group), Graduate School of Informatics, Kyoto University. Documenting my transition from software engineering into LLMs, NLP research, algorithms, and life in Japan — entirely in English.",
+  "links": {
+    "github": "https://github.com/feuclain",
+    "email": "",
+    "linkedin": "",
+    "lab": "https://nlp.ist.i.kyoto-u.ac.jp/"
+  },
+  "focusAreas": [
+    {
+      "label": "01 / CORE RESEARCH",
+      "title": "NLP & Large Language Models",
+      "description": "From-scratch Transformer implementations, post-training alignment (SFT, DPO, RL), mechanistic interpretability, and reading Kyoto NLP Lab papers."
+    },
+    {
+      "label": "02 / SYSTEMS & HARDWARE",
+      "title": "Efficient Inference & MLSys",
+      "description": "Bridging software engineering with AI: KV cache mechanics, quantization (AWQ/GPTQ), vLLM serving, and GPU memory profiling."
+    },
+    {
+      "label": "03 / ENGINEERING CRAFT",
+      "title": "Algorithms & Think-Aloud Practice",
+      "description": "Structured LeetCode solutions written in interview-ready English — emphasizing intuition, invariants, edge cases, and clean complexity analysis."
+    }
+  ]
+}

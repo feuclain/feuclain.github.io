@@ -1,0 +1,334 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import site from '../data/site.json';
+import timelineData from '../data/timeline.json';
+import roadmapData from '../data/roadmap.json';
+import { CATEGORY_META, formatDate, estimateReadingTime } from '../utils/format';
+
+const allPosts = (await getCollection('writing', ({ data }) => !data.draft)).sort(
+  (a, b) => b.data.date.valueOf() - a.data.date.valueOf()
+);
+const recentPosts = allPosts.slice(0, 4);
+const recentMilestones = timelineData.milestones.slice(0, 4);
+---
+
+<BaseLayout>
+  <section class="hero">
+    <div class="status-pill">
+      <span class="status-dot"></span>
+      <span>{site.statusBadge}</span>
+    </div>
+
+    <h1 class="hero-title">{site.tagline}</h1>
+    <p class="hero-bio">{site.bio}</p>
+
+    <div class="hero-actions">
+      <a href="/writing" class="btn-primary">Read Technical Notes →</a>
+      <a href="/roadmap" class="btn-secondary">Now & Roadmap</a>
+      <a href="/timeline" class="btn-secondary">Journey Timeline</a>
+      <a href={site.links.github} target="_blank" rel="noreferrer" class="btn-ghost">
+        GitHub ↗
+      </a>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-heading">
+      <h2>Focus Areas</h2>
+      <span class="section-link">NJU SE → KyotoU NLP</span>
+    </div>
+    <div class="grid-3">
+      {
+        site.focusAreas.map((area) => (
+          <div class="card">
+            <div class="focus-label">{area.label}</div>
+            <h3 class="focus-title">{area.title}</h3>
+            <p class="focus-desc">{area.description}</p>
+          </div>
+        ))
+      }
+    </div>
+  </section>
+
+  <section>
+    <div class="section-heading">
+      <h2>Latest Writing</h2>
+      <a href="/writing" class="section-link">All {allPosts.length} posts →</a>
+    </div>
+
+    <div class="post-list">
+      {
+        recentPosts.map((post) => {
+          const cat = CATEGORY_META[post.data.category] ?? {
+            label: post.data.category,
+            badgeClass: 'badge-ai-llm',
+          };
+          const readTime = post.data.readingTime || estimateReadingTime(post.body);
+          return (
+            <a href={`/writing/${post.slug}`} class="post-item" aria-label={post.data.title}>
+              <div class="post-meta">
+                <span>{formatDate(post.data.date)}</span>
+                <span>·</span>
+                <span class:list={['badge', cat.badgeClass]}>{cat.label}</span>
+                <span>·</span>
+                <span>{readTime}</span>
+              </div>
+              <h3 class="post-title">{post.data.title}</h3>
+              <p class="post-summary">{post.data.summary}</p>
+              <div class="tag-row">
+                {post.data.tags.map((tag) => (
+                  <span class="tag-chip">#{tag}</span>
+                ))}
+              </div>
+            </a>
+          );
+        })
+      }
+    </div>
+  </section>
+
+  <section>
+    <div class="grid-2" style="margin-top: 3.25rem;">
+      <div class="card">
+        <div class="mini-header">
+          <div>
+            <span class="eyebrow" style="margin-bottom: 0.25rem;">ACTIVE SPRINT</span>
+            <h2 class="mini-title">What I'm Doing Now</h2>
+          </div>
+          <a href="/roadmap" class="section-link">Full Plan →</a>
+        </div>
+        <p class="mini-desc">{roadmapData.now.summary}</p>
+        <div class="sprint-list">
+          {
+            roadmapData.now.tracks.map((track) => (
+              <div class="sprint-item">
+                <div class="sprint-row">
+                  <span class="sprint-name">{track.title}</span>
+                  <span class="sprint-pct">{track.progress}%</span>
+                </div>
+                <div class="progress-track">
+                  <div class="progress-fill" style={`width: ${track.progress}%`} />
+                </div>
+              </div>
+            ))
+          }
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="mini-header">
+          <div>
+            <span class="eyebrow" style="margin-bottom: 0.25rem;">RECENT LOG</span>
+            <h2 class="mini-title">Journey Milestones</h2>
+          </div>
+          <a href="/timeline" class="section-link">Full Timeline →</a>
+        </div>
+        <ul class="mini-timeline">
+          {
+            recentMilestones.map((m) => (
+              <li>
+                <span class="mini-date">{m.date}</span>
+                <div>
+                  <div class="mini-m-title">{m.title}</div>
+                  <div class="mini-m-note">{m.note}</div>
+                </div>
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .hero {
+    padding: 1rem 0 1.75rem;
+  }
+
+  .hero-title {
+    font-family: var(--font-serif);
+    font-size: clamp(2.2rem, 5vw, 3.25rem);
+    font-weight: 500;
+    line-height: 1.12;
+    letter-spacing: -0.03em;
+    margin: 0 0 1.15rem;
+    max-width: 760px;
+  }
+
+  .hero-bio {
+    font-size: 1.08rem;
+    line-height: 1.75;
+    color: var(--text-secondary);
+    max-width: 680px;
+    margin: 0 0 1.75rem;
+  }
+
+  .hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.7rem;
+  }
+
+  .btn-primary,
+  .btn-secondary,
+  .btn-ghost {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.56rem 1.08rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: all 0.16s ease;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: #ffffff;
+    border: 1px solid var(--accent);
+  }
+
+  [data-theme='dark'] .btn-primary {
+    color: #0f1115;
+  }
+
+  .btn-primary:hover {
+    background: var(--accent-hover);
+    border-color: var(--accent-hover);
+    color: #ffffff;
+  }
+
+  [data-theme='dark'] .btn-primary:hover {
+    color: #0f1115;
+  }
+
+  .btn-secondary {
+    background: var(--bg-elevated);
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+
+  .btn-secondary:hover {
+    border-color: var(--border-strong);
+    color: var(--accent);
+  }
+
+  .btn-ghost {
+    color: var(--text-secondary);
+    padding-left: 0.6rem;
+    padding-right: 0.6rem;
+  }
+
+  .btn-ghost:hover {
+    color: var(--accent);
+  }
+
+  .focus-label {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--accent);
+    margin-bottom: 0.55rem;
+    letter-spacing: 0.04em;
+  }
+
+  .focus-title {
+    font-family: var(--font-serif);
+    font-size: 1.2rem;
+    font-weight: 500;
+    margin: 0 0 0.5rem;
+  }
+
+  .focus-desc {
+    margin: 0;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    line-height: 1.6;
+  }
+
+  .mini-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .mini-title {
+    font-family: var(--font-serif);
+    font-size: 1.35rem;
+    font-weight: 500;
+    margin: 0;
+  }
+
+  .mini-desc {
+    margin: 0 0 1.2rem;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    line-height: 1.6;
+  }
+
+  .sprint-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.95rem;
+  }
+
+  .sprint-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.86rem;
+    font-weight: 500;
+  }
+
+  .sprint-pct {
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    color: var(--text-muted);
+  }
+
+  .mini-timeline {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.95rem;
+  }
+
+  .mini-timeline li {
+    display: grid;
+    grid-template-columns: 76px 1fr;
+    gap: 0.75rem;
+    align-items: start;
+    padding-bottom: 0.85rem;
+    border-bottom: 1px dashed var(--border);
+  }
+
+  .mini-timeline li:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+
+  .mini-date {
+    font-family: var(--font-mono);
+    font-size: 0.74rem;
+    color: var(--text-muted);
+    padding-top: 0.15rem;
+  }
+
+  .mini-m-title {
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: var(--text);
+    line-height: 1.35;
+  }
+
+  .mini-m-note {
+    font-size: 0.84rem;
+    color: var(--text-secondary);
+    margin-top: 0.2rem;
+    line-height: 1.5;
+  }
+</style>
