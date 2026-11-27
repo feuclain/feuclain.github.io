@@ -1,0 +1,106 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 420" fill="none">
+  <defs>
+    <marker id="fwd-arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#7DA9E8"/>
+    </marker>
+    <marker id="bwd-arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#E6AB55"/>
+    </marker>
+  </defs>
+
+  <rect width="880" height="420" fill="#141821"/>
+  <rect x="16" y="16" width="848" height="388" rx="14" fill="#1A202C" stroke="#2D3748" stroke-width="1.5"/>
+
+  <!-- Header -->
+  <text x="40" y="50" fill="#9EC0F2" font-family="ui-monospace, SFMono-Regular, Consolas, monospace" font-size="13" font-weight="600" letter-spacing="1">CHAPTERS 3 &amp; 4 · BACKPROPAGATION &amp; CHAIN-RULE SENSITIVITY FLOW</text>
+  <line x1="40" y1="62" x2="840" y2="62" stroke="#2D3748" stroke-width="1"/>
+
+  <!-- Forward Pass Legend -->
+  <g transform="translate(40, 82)">
+    <line x1="0" y1="0" x2="22" y2="0" stroke="#7DA9E8" stroke-width="2.2" marker-end="url(#fwd-arr)"/>
+    <text x="30" y="4" fill="#9EC0F2" font-family="ui-monospace, monospace" font-size="11">Forward Pass (compute activations &amp; loss)</text>
+    <line x1="350" y1="0" x2="372" y2="0" stroke="#E6AB55" stroke-width="2.2" stroke-dasharray="4 3" marker-end="url(#bwd-arr)"/>
+    <text x="380" y="4" fill="#E6AB55" font-family="ui-monospace, monospace" font-size="11">Backward Pass (propagate local partial derivatives)</text>
+  </g>
+
+  <!-- Computation Graph Area -->
+  <rect x="40" y="98" width="800" height="176" rx="10" fill="#141821" stroke="#2D3748"/>
+
+  <!-- Parameter Nodes (w and b) -->
+  <circle cx="242" cy="128" r="20" fill="#1E293B" stroke="#E37B6B" stroke-width="1.8"/>
+  <text x="242" y="132" fill="#E37B6B" font-family="ui-monospace, monospace" font-size="13" font-weight="600" text-anchor="middle">w⁽ᴸ⁾</text>
+
+  <circle cx="322" cy="128" r="20" fill="#1E293B" stroke="#B195E8" stroke-width="1.8"/>
+  <text x="322" y="132" fill="#B195E8" font-family="ui-monospace, monospace" font-size="13" font-weight="600" text-anchor="middle">b⁽ᴸ⁾</text>
+
+  <circle cx="670" cy="128" r="19" fill="#1E293B" stroke="#64748B" stroke-width="1.6"/>
+  <text x="670" y="132" fill="#CBD5E1" font-family="ui-monospace, monospace" font-size="13" font-weight="600" text-anchor="middle">y</text>
+
+  <!-- Main Chain Nodes -->
+  <!-- a^(L-1) -->
+  <rect x="64" y="168" width="96" height="46" rx="10" fill="#1E293B" stroke="#4EC499" stroke-width="1.8"/>
+  <text x="112" y="196" fill="#4EC499" font-family="ui-monospace, monospace" font-size="14" font-weight="600" text-anchor="middle">a⁽ᴸ⁻¹⁾</text>
+
+  <!-- z^(L) -->
+  <rect x="228" y="168" width="136" height="46" rx="10" fill="#1E293B" stroke="#7DA9E8" stroke-width="1.8"/>
+  <text x="296" y="188" fill="#ECEEF2" font-family="ui-monospace, monospace" font-size="13" font-weight="600" text-anchor="middle">z⁽ᴸ⁾</text>
+  <text x="296" y="205" fill="#94A3B8" font-family="ui-monospace, monospace" font-size="10.5" text-anchor="middle">w⁽ᴸ⁾a⁽ᴸ⁻¹⁾ + b⁽ᴸ⁾</text>
+
+  <!-- a^(L) -->
+  <rect x="446" y="168" width="120" height="46" rx="10" fill="#1E293B" stroke="#7DA9E8" stroke-width="1.8"/>
+  <text x="506" y="188" fill="#ECEEF2" font-family="ui-monospace, monospace" font-size="13" font-weight="600" text-anchor="middle">a⁽ᴸ⁾</text>
+  <text x="506" y="205" fill="#94A3B8" font-family="ui-monospace, monospace" font-size="10.5" text-anchor="middle">σ(z⁽ᴸ⁾)</text>
+
+  <!-- C_0 -->
+  <rect x="650" y="168" width="154" height="46" rx="10" fill="#2A1E24" stroke="#E37B6B" stroke-width="1.8"/>
+  <text x="727" y="188" fill="#E37B6B" font-family="ui-monospace, monospace" font-size="13" font-weight="600" text-anchor="middle">C₀ (Cost)</text>
+  <text x="727" y="205" fill="#FCA5A5" font-family="ui-monospace, monospace" font-size="10.5" text-anchor="middle">(a⁽ᴸ⁾ − y)²</text>
+
+  <!-- Forward Arrows -->
+  <line x1="160" y1="191" x2="222" y2="191" stroke="#7DA9E8" stroke-width="2" marker-end="url(#fwd-arr)"/>
+  <line x1="254" y1="146" x2="270" y2="165" stroke="#7DA9E8" stroke-width="1.8" marker-end="url(#fwd-arr)"/>
+  <line x1="312" y1="146" x2="300" y2="165" stroke="#7DA9E8" stroke-width="1.8" marker-end="url(#fwd-arr)"/>
+  <line x1="364" y1="191" x2="440" y2="191" stroke="#7DA9E8" stroke-width="2" marker-end="url(#fwd-arr)"/>
+  <line x1="566" y1="191" x2="644" y2="191" stroke="#7DA9E8" stroke-width="2" marker-end="url(#fwd-arr)"/>
+  <line x1="684" y1="143" x2="704" y2="165" stroke="#7DA9E8" stroke-width="1.8" marker-end="url(#fwd-arr)"/>
+
+  <!-- Backward Chain-Rule Curves -->
+  <!-- C0 -> a^(L) -->
+  <path d="M 650 206 Q 608 240 570 214" stroke="#E6AB55" stroke-width="2" stroke-dasharray="4 3" fill="none" marker-end="url(#bwd-arr)"/>
+  <text x="610" y="252" fill="#E6AB55" font-family="ui-monospace, monospace" font-size="10.5" text-anchor="middle">∂C₀/∂a⁽ᴸ⁾ = 2(a⁽ᴸ⁾−y)</text>
+
+  <!-- a^(L) -> z^(L) -->
+  <path d="M 446 206 Q 406 240 368 214" stroke="#E6AB55" stroke-width="2" stroke-dasharray="4 3" fill="none" marker-end="url(#bwd-arr)"/>
+  <text x="406" y="252" fill="#E6AB55" font-family="ui-monospace, monospace" font-size="10.5" text-anchor="middle">∂a⁽ᴸ⁾/∂z⁽ᴸ⁾ = σ'(z⁽ᴸ⁾)</text>
+
+  <!-- z^(L) -> a^(L-1) -->
+  <path d="M 228 206 Q 194 240 164 214" stroke="#E6AB55" stroke-width="2" stroke-dasharray="4 3" fill="none" marker-end="url(#bwd-arr)"/>
+  <text x="194" y="252" fill="#E6AB55" font-family="ui-monospace, monospace" font-size="10.5" text-anchor="middle">∂z⁽ᴸ⁾/∂a⁽ᴸ⁻¹⁾ = w⁽ᴸ⁾</text>
+
+  <!-- z^(L) -> w^(L) -->
+  <path d="M 244 168 Q 222 158 228 148" stroke="#E6AB55" stroke-width="1.7" stroke-dasharray="3 3" fill="none" marker-end="url(#bwd-arr)"/>
+  <text x="190" y="138" fill="#E6AB55" font-family="ui-monospace, monospace" font-size="10" text-anchor="end">∂z/∂w = a⁽ᴸ⁻¹⁾</text>
+
+  <!-- z^(L) -> b^(L) -->
+  <path d="M 336 168 Q 354 156 344 143" stroke="#E6AB55" stroke-width="1.7" stroke-dasharray="3 3" fill="none" marker-end="url(#bwd-arr)"/>
+  <text x="360" y="138" fill="#E6AB55" font-family="ui-monospace, monospace" font-size="10">∂z/∂b = 1</text>
+
+  <!-- Bottom Two Cards -->
+  <rect x="40" y="290" width="390" height="96" rx="10" fill="#141821" stroke="#2D3748"/>
+  <text x="58" y="314" fill="#4EC499" font-family="ui-monospace, monospace" font-size="11" font-weight="600">WEIGHT GRADIENT (SINGLE PATH)</text>
+  <text x="58" y="340" fill="#ECEEF2" font-family="ui-monospace, monospace" font-size="12">
+    ∂C₀/∂w⁽ᴸ⁾ = <tspan fill="#4EC499">a⁽ᴸ⁻¹⁾</tspan> · <tspan fill="#9EC0F2">σ'(z⁽ᴸ⁾)</tspan> · <tspan fill="#E37B6B">2(a⁽ᴸ⁾ − y)</tspan>
+  </text>
+  <text x="58" y="368" fill="#94A3B8" font-family="ui-monospace, monospace" font-size="10.5">
+    "Neurons that fire together wire together" — proportional to a⁽ᴸ⁻¹⁾
+  </text>
+
+  <rect x="450" y="290" width="390" height="96" rx="10" fill="#141821" stroke="#2D3748"/>
+  <text x="468" y="314" fill="#B195E8" font-family="ui-monospace, monospace" font-size="11" font-weight="600">MULTI-NEURON LAYER FAN-OUT (SUM PATHS)</text>
+  <text x="468" y="340" fill="#ECEEF2" font-family="ui-monospace, monospace" font-size="12">
+    ∂C₀/∂aₖ⁽ᴸ⁻¹⁾ = Σⱼ <tspan fill="#E37B6B">wⱼₖ⁽ᴸ⁾</tspan> · <tspan fill="#9EC0F2">σ'(zⱼ⁽ᴸ⁾)</tspan> · <tspan fill="#E6AB55">∂C₀/∂aⱼ⁽ᴸ⁾</tspan>
+  </text>
+  <text x="468" y="368" fill="#94A3B8" font-family="ui-monospace, monospace" font-size="10.5">
+    Each neuron sums weighted error signals from every downstream neuron j
+  </text>
+</svg>

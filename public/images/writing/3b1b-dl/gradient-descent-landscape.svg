@@ -1,0 +1,109 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 420" fill="none">
+  <defs>
+    <marker id="arr-emerald" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#4EC499"/>
+    </marker>
+    <marker id="arr-amber" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#E6AB55"/>
+    </marker>
+    <marker id="arr-red" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#E37B6B"/>
+    </marker>
+  </defs>
+
+  <rect width="880" height="420" fill="#141821"/>
+  <rect x="16" y="16" width="848" height="388" rx="14" fill="#1A202C" stroke="#2D3748" stroke-width="1.5"/>
+
+  <!-- Header -->
+  <text x="40" y="50" fill="#9EC0F2" font-family="ui-monospace, SFMono-Regular, Consolas, monospace" font-size="13" font-weight="600" letter-spacing="1">CHAPTER 2 · COST LANDSCAPE &amp; GRADIENT DESCENT OPTIMIZATION</text>
+  <line x1="40" y1="62" x2="840" y2="62" stroke="#2D3748" stroke-width="1"/>
+
+  <!-- LEFT PANEL: 2D Contour Landscape -->
+  <text x="40" y="88" fill="#A8B0BF" font-family="ui-monospace, monospace" font-size="11.5" font-weight="600">2D PARAMETER SPACE CONTOURS  C(w₁, w₂)</text>
+  <rect x="40" y="100" width="424" height="252" rx="10" fill="#141821" stroke="#2D3748"/>
+
+  <!-- Axes -->
+  <line x1="58" y1="334" x2="446" y2="334" stroke="#334155" stroke-width="1"/>
+  <line x1="58" y1="116" x2="58" y2="334" stroke="#334155" stroke-width="1"/>
+  <text x="438" y="326" fill="#64748B" font-family="ui-monospace, monospace" font-size="10.5">w₁</text>
+  <text x="66" y="126" fill="#64748B" font-family="ui-monospace, monospace" font-size="10.5">w₂</text>
+
+  <!-- Global Minimum Contours (right-center) -->
+  <g transform="translate(296, 246) rotate(-18)">
+    <ellipse cx="0" cy="0" rx="138" ry="88" stroke="#26354D" stroke-width="1.2" fill="#1B273B" fill-opacity="0.22"/>
+    <ellipse cx="0" cy="0" rx="104" ry="64" stroke="#2F4970" stroke-width="1.3" fill="#1D3252" fill-opacity="0.25"/>
+    <ellipse cx="0" cy="0" rx="70" ry="42" stroke="#3E689E" stroke-width="1.4" fill="#23426B" fill-opacity="0.28"/>
+    <ellipse cx="0" cy="0" rx="38" ry="22" stroke="#4EC499" stroke-width="1.4" fill="#1F7A5A" fill-opacity="0.22"/>
+  </g>
+
+  <!-- Local Minimum Basin (top-left) -->
+  <g transform="translate(132, 168) rotate(12)">
+    <ellipse cx="0" cy="0" rx="52" ry="34" stroke="#5A4524" stroke-width="1.2" stroke-dasharray="4 3" fill="#E6AB55" fill-opacity="0.06"/>
+    <ellipse cx="0" cy="0" rx="26" ry="17" stroke="#A86B15" stroke-width="1.3" fill="#E6AB55" fill-opacity="0.12"/>
+  </g>
+  <circle cx="132" cy="168" r="4.5" fill="#E6AB55"/>
+  <text x="132" y="150" fill="#E6AB55" font-family="ui-monospace, monospace" font-size="10" text-anchor="middle">local min</text>
+
+  <!-- Global Minimum Marker -->
+  <circle cx="296" cy="246" r="5.5" fill="#4EC499"/>
+  <text x="296" y="268" fill="#4EC499" font-family="ui-monospace, monospace" font-size="10.5" font-weight="600" text-anchor="middle">global min w*</text>
+
+  <!-- Batch GD Smooth Path -->
+  <path d="M 412 146 L 372 178 L 340 206 L 315 228 L 301 242" stroke="#4EC499" stroke-width="2.2" fill="none" marker-end="url(#arr-emerald)"/>
+  <circle cx="412" cy="146" r="4.5" fill="#ECEEF2"/>
+  <text x="412" y="135" fill="#ECEEF2" font-family="ui-monospace, monospace" font-size="10" text-anchor="middle">init w₀</text>
+
+  <!-- Negative gradient tangent callout -->
+  <line x1="372" y1="178" x2="348" y2="199" stroke="#E6AB55" stroke-width="2.4" marker-end="url(#arr-amber)"/>
+  <text x="394" y="200" fill="#E6AB55" font-family="ui-monospace, monospace" font-size="10.5">-η∇C(w)</text>
+
+  <!-- Mini-batch SGD Zig-Zag Path -->
+  <path d="M 118 298 L 154 274 L 166 296 L 204 264 L 222 280 L 252 248 L 270 260 L 291 248" stroke="#B195E8" stroke-width="1.8" stroke-dasharray="4 3" fill="none"/>
+  <circle cx="118" cy="298" r="4" fill="#B195E8"/>
+
+  <!-- Legend -->
+  <g transform="translate(44, 374)">
+    <line x1="0" y1="0" x2="20" y2="0" stroke="#4EC499" stroke-width="2.2"/>
+    <text x="26" y="4" fill="#A8B0BF" font-family="ui-monospace, monospace" font-size="10.5">Batch GD (exact −∇C)</text>
+    <line x1="186" y1="0" x2="206" y2="0" stroke="#B195E8" stroke-width="2" stroke-dasharray="4 3"/>
+    <text x="212" y="4" fill="#A8B0BF" font-family="ui-monospace, monospace" font-size="10.5">Mini-batch SGD (noisy, fast)</text>
+  </g>
+
+  <!-- Divider -->
+  <line x1="484" y1="78" x2="484" y2="386" stroke="#2D3748" stroke-dasharray="4 4"/>
+
+  <!-- RIGHT PANEL: 1D Intuition + Update Rules -->
+  <text x="508" y="88" fill="#A8B0BF" font-family="ui-monospace, monospace" font-size="11.5" font-weight="600">STEP-SIZE INTUITION (1D SLICE)</text>
+
+  <rect x="508" y="100" width="332" height="150" rx="10" fill="#141821" stroke="#2D3748"/>
+  <!-- 1D Parabola -->
+  <line x1="532" y1="226" x2="818" y2="226" stroke="#334155" stroke-width="1"/>
+  <line x1="556" y1="116" x2="556" y2="234" stroke="#334155" stroke-width="1"/>
+  <text x="564" y="128" fill="#64748B" font-family="ui-monospace, monospace" font-size="10">C(w)</text>
+  <text x="808" y="240" fill="#64748B" font-family="ui-monospace, monospace" font-size="10">w</text>
+
+  <path d="M 578 124 Q 684 294 790 124" stroke="#7DA9E8" stroke-width="2.4" fill="none"/>
+  <!-- Good step -->
+  <circle cx="758" cy="166" r="4.5" fill="#4EC499"/>
+  <line x1="734" y1="198" x2="782" y2="134" stroke="#4EC499" stroke-width="1.2" stroke-dasharray="3 3"/>
+  <path d="M 754 170 Q 726 206 704 206" stroke="#4EC499" stroke-width="2" fill="none" marker-end="url(#arr-emerald)"/>
+  <text x="728" y="218" fill="#4EC499" font-family="ui-monospace, monospace" font-size="10">good η</text>
+
+  <!-- Overshooting step -->
+  <circle cx="604" cy="158" r="4.5" fill="#E37B6B"/>
+  <path d="M 608 156 Q 684 114 762 152" stroke="#E37B6B" stroke-width="1.8" stroke-dasharray="4 3" fill="none" marker-end="url(#arr-red)"/>
+  <text x="684" y="130" fill="#E37B6B" font-family="ui-monospace, monospace" font-size="10" text-anchor="middle">η too large → overshoot</text>
+
+  <!-- Update Rule Box -->
+  <text x="508" y="274" fill="#A8B0BF" font-family="ui-monospace, monospace" font-size="11.5" font-weight="600">CORE UPDATE EQUATIONS</text>
+  <rect x="508" y="284" width="332" height="100" rx="10" fill="#141821" stroke="#334155" stroke-width="1.2"/>
+  <text x="526" y="312" fill="#ECEEF2" font-family="ui-monospace, monospace" font-size="13.5" font-weight="600">
+    wₜ₊₁ = wₜ − <tspan fill="#E6AB55">η</tspan> · <tspan fill="#4EC499">∇C(wₜ)</tspan>
+  </text>
+  <text x="526" y="338" fill="#9EC0F2" font-family="ui-monospace, monospace" font-size="11.5">
+    ∇C = [ ∂C/∂w₁, ∂C/∂w₂, …, ∂C/∂wₙ ]ᵀ
+  </text>
+  <text x="526" y="364" fill="#94A3B8" font-family="ui-monospace, monospace" font-size="10.8">
+    Direction = steepest ascent  |  Magnitude = sensitivity
+  </text>
+</svg>

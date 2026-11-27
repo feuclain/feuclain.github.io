@@ -1,0 +1,131 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 436" fill="none">
+  <defs>
+    <marker id="arr-b" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#7DA9E8"/>
+    </marker>
+    <marker id="arr-p" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#B195E8"/>
+    </marker>
+    <marker id="arr-g" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#4EC499"/>
+    </marker>
+  </defs>
+
+  <rect width="880" height="436" fill="#141821"/>
+  <rect x="16" y="16" width="848" height="404" rx="14" fill="#1A202C" stroke="#2D3748" stroke-width="1.5"/>
+
+  <!-- Header -->
+  <text x="40" y="50" fill="#9EC0F2" font-family="ui-monospace, SFMono-Regular, Consolas, monospace" font-size="13" font-weight="600" letter-spacing="1">CHAPTERS 6 &amp; 7 · SELF-ATTENTION (Q·K·V) &amp; MLP FACTUAL MEMORY</text>
+  <line x1="40" y1="62" x2="840" y2="62" stroke="#2D3748" stroke-width="1"/>
+
+  <!-- LEFT PANEL: Self-Attention (Ch 6) -->
+  <text x="40" y="88" fill="#9EC0F2" font-family="ui-monospace, monospace" font-size="11.5" font-weight="600">CH 6 · SELF-ATTENTION: CONTEXTUALIZING EMBEDDINGS</text>
+
+  <!-- Attention Grid -->
+  <rect x="40" y="100" width="406" height="296" rx="10" fill="#141821" stroke="#2D3748"/>
+
+  <!-- Column headers (Keys K) -->
+  <text x="278" y="120" fill="#4EC499" font-family="ui-monospace, monospace" font-size="10.5" font-weight="600" text-anchor="middle">KEYS  K = W_K E  (what I offer)</text>
+  <g font-family="ui-monospace, monospace" font-size="10" fill="#A8B0BF" text-anchor="middle">
+    <text x="172" y="140">"a"</text>
+    <text x="234" y="140">"fluffy"</text>
+    <text x="296" y="140">"blue"</text>
+    <text x="358" y="140">"creature"</text>
+  </g>
+
+  <!-- Row headers (Queries Q) -->
+  <g font-family="ui-monospace, monospace" font-size="10" fill="#A8B0BF" text-anchor="end">
+    <text x="132" y="170">"a"</text>
+    <text x="132" y="210">"fluffy"</text>
+    <text x="132" y="250">"blue"</text>
+    <text x="132" y="290" fill="#E6AB55" font-weight="700">"creature"</text>
+  </g>
+
+  <!-- 4x4 Causal Attention Matrix -->
+  <g transform="translate(144, 148)">
+    <!-- Row 0 -->
+    <rect x="0" y="0" width="56" height="34" rx="5" fill="#3B82F6" fill-opacity="0.88"/>
+    <text x="28" y="21" fill="#ECEEF2" font-family="ui-monospace, monospace" font-size="10" text-anchor="middle">1.00</text>
+    <rect x="62" y="0" width="56" height="34" rx="5" fill="#1E2532" stroke="#2B3548"/>
+    <text x="90" y="21" fill="#475569" font-family="ui-monospace, monospace" font-size="10" text-anchor="middle">−∞</text>
+    <rect x="124" y="0" width="56" height="34" rx="5" fill="#1E2532" stroke="#2B3548"/>
+    <text x="152" y="21" fill="#475569" font-family="ui-monospace, monospace" font-size="10" text-anchor="middle">−∞</text>
+    <rect x="186" y="0" width="56" height="34" rx="5" fill="#1E2532" stroke="#2B3548"/>
+    <text x="214" y="21" fill="#475569" font-family="ui-monospace, monospace" font-size="10" text-anchor="middle">−∞</text>
+
+    <!-- Row 1 -->
+    <rect x="0" y="40" width="56" height="34" rx="5" fill="#3B82F6" fill-opacity="0.28"/>
+    <text x="28" y="61" fill="#CBD5E1" font-family="ui-monospace, monospace" font-size="10" text-anchor="middle">0.22</text>
+    <rect x="62" y="40" width="56" height="34" rx="5" fill="#3B82F6" fill-opacity="0.78"/>
+    <text x="90" y="61" fill="#ECEEF2" font-family="ui-monospace, monospace" font-size="10" text-anchor="middle">0.78</text>
+    <rect x="124" y="40" width="56" height="34" rx="5" fill="#1E2532" stroke="#2B3548"/>
+    <text x="152" y="61" fill="#475569" font-family="ui-monospace, monospace" font-size="10" text-anchor="middle">−∞</text>
+    <rect x="186" y="40" width="56" height="34" rx="5" fill="#1E2532" stroke="#2B3548"/>
+    <text x="214" y="61" fill="#475569" font-family="ui-monospace, monospace" font-size="10" text-anchor="middle">−∞</text>
+
+    <!-- Row 2 -->
+    <rect x="0" y="80" width="56" height="34" rx="5" fill="#3B82F6" fill-opacity="0.18"/>
+    <text x="28" y="101" fill="#94A3B8" font-family="ui-monospace, monospace" font-size="10" text-anchor="middle">0.10</text>
+    <rect x="62" y="80" width="56" height="34" rx="5" fill="#3B82F6" fill-opacity="0.32"/>
+    <text x="90" y="101" fill="#CBD5E1" font-family="ui-monospace, monospace" font-size="10" text-anchor="middle">0.24</text>
+    <rect x="124" y="80" width="56" height="34" rx="5" fill="#3B82F6" fill-opacity="0.68"/>
+    <text x="152" y="101" fill="#ECEEF2" font-family="ui-monospace, monospace" font-size="10" text-anchor="middle">0.66</text>
+    <rect x="186" y="80" width="56" height="34" rx="5" fill="#1E2532" stroke="#2B3548"/>
+    <text x="214" y="101" fill="#475569" font-family="ui-monospace, monospace" font-size="10" text-anchor="middle">−∞</text>
+
+    <!-- Row 3: highlighted "creature" attending to "fluffy" & "blue" -->
+    <rect x="0" y="120" width="56" height="34" rx="5" fill="#3B82F6" fill-opacity="0.16"/>
+    <text x="28" y="141" fill="#94A3B8" font-family="ui-monospace, monospace" font-size="10" text-anchor="middle">0.05</text>
+    <rect x="62" y="120" width="56" height="34" rx="5" fill="#E6AB55" fill-opacity="0.82" stroke="#FDE68A"/>
+    <text x="90" y="141" fill="#0F1115" font-family="ui-monospace, monospace" font-size="10" font-weight="700" text-anchor="middle">0.44</text>
+    <rect x="124" y="120" width="56" height="34" rx="5" fill="#E6AB55" fill-opacity="0.72" stroke="#FDE68A"/>
+    <text x="152" y="141" fill="#0F1115" font-family="ui-monospace, monospace" font-size="10" font-weight="700" text-anchor="middle">0.39</text>
+    <rect x="186" y="120" width="56" height="34" rx="5" fill="#3B82F6" fill-opacity="0.25"/>
+    <text x="214" y="141" fill="#CBD5E1" font-family="ui-monospace, monospace" font-size="10" text-anchor="middle">0.12</text>
+  </g>
+
+  <!-- Attention Formula & Value Update -->
+  <rect x="56" y="316" width="374" height="66" rx="8" fill="#1A2232" stroke="#334155"/>
+  <text x="70" y="338" fill="#ECEEF2" font-family="ui-monospace, monospace" font-size="11.5" font-weight="600">
+    ΔE_i = Σ_j softmax( Q_i · K_j / √d_k ) · V_j
+  </text>
+  <text x="70" y="358" fill="#E6AB55" font-family="ui-monospace, monospace" font-size="10">
+    Q("creature") aligns with K("fluffy"), K("blue")
+  </text>
+  <text x="70" y="373" fill="#94A3B8" font-family="ui-monospace, monospace" font-size="10">
+    → adds Value vectors V("fluffy"), V("blue") into E("creature")
+  </text>
+
+  <!-- Divider -->
+  <line x1="464" y1="78" x2="464" y2="396" stroke="#2D3748" stroke-dasharray="4 4"/>
+
+  <!-- RIGHT PANEL: MLP Factual Memory (Ch 7) -->
+  <text x="484" y="88" fill="#B195E8" font-family="ui-monospace, monospace" font-size="11.5" font-weight="600">CH 7 · MLP BLOCK AS KEY–VALUE FACT MEMORY</text>
+
+  <rect x="484" y="100" width="356" height="296" rx="10" fill="#141821" stroke="#2D3748"/>
+
+  <!-- Step 1: Input Embedding -->
+  <rect x="504" y="116" width="316" height="44" rx="8" fill="#1E293B" stroke="#4EC499"/>
+  <text x="518" y="135" fill="#4EC499" font-family="ui-monospace, monospace" font-size="10.5" font-weight="600">RESIDUAL VECTOR  E  (dim d)</text>
+  <text x="518" y="151" fill="#ECEEF2" font-family="ui-monospace, monospace" font-size="10.5">encodes features: ["Michael"] + ["Jordan"]</text>
+
+  <line x1="662" y1="160" x2="662" y2="180" stroke="#B195E8" stroke-width="1.8" marker-end="url(#arr-p)"/>
+
+  <!-- Step 2: Up-projection + ReLU/GELU AND-Gate -->
+  <rect x="504" y="184" width="316" height="66" rx="8" fill="#1E293B" stroke="#B195E8"/>
+  <text x="518" y="203" fill="#B195E8" font-family="ui-monospace, monospace" font-size="10.5" font-weight="600">UP-PROJECTION &amp; NONLINEAR GATE  (d → 4d)</text>
+  <text x="518" y="221" fill="#ECEEF2" font-family="ui-monospace, monospace" font-size="11">h = ReLU( W_↑ E + b_↑ )</text>
+  <text x="518" y="239" fill="#E6AB55" font-family="ui-monospace, monospace" font-size="10">Bias b_↑ acts as AND-gate: fires iff Michael ∧ Jordan</text>
+
+  <line x1="662" y1="250" x2="662" y2="270" stroke="#B195E8" stroke-width="1.8" marker-end="url(#arr-p)"/>
+
+  <!-- Step 3: Down-projection -->
+  <rect x="504" y="274" width="316" height="54" rx="8" fill="#1E293B" stroke="#7DA9E8"/>
+  <text x="518" y="293" fill="#9EC0F2" font-family="ui-monospace, monospace" font-size="10.5" font-weight="600">DOWN-PROJECTION VALUE LOOKUP  (4d → d)</text>
+  <text x="518" y="313" fill="#ECEEF2" font-family="ui-monospace, monospace" font-size="10.8">ΔE_MLP = W_↓ h  → adds ["Basketball"] vector</text>
+
+  <!-- Superposition Callout -->
+  <rect x="504" y="340" width="316" height="42" rx="8" fill="#1B2130" stroke="#334155" stroke-dasharray="3 3"/>
+  <text x="518" y="357" fill="#4EC499" font-family="ui-monospace, monospace" font-size="10" font-weight="600">SUPERPOSITION HYPOTHESIS</text>
+  <text x="518" y="373" fill="#94A3B8" font-family="ui-monospace, monospace" font-size="9.8">High-dim space fits &gt;&gt; d nearly-orthogonal features!</text>
+</svg>
